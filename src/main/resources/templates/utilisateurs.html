@@ -9,21 +9,25 @@
         <aside th:replace="layout :: sidebar"></aside>
         <main class="content-area">
 
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div>
-                    <h1 style="font-size: 24px; margin-bottom: 4px;">Clients</h1>
-                    <p style="color: var(--yt-text-secondary); font-size: 14px;">
-                        <span th:text="${#lists.size(utilisateurs)}">0</span> client(s) enregistré(s)
-                    </p>
+                    <h1 style="font-size: 24px; margin-bottom: 8px;">Gestion des Clients</h1>
+                    <p style="color: var(--yt-text-secondary);">Ajoutez, modifiez ou consultez la liste de vos clients.</p>
                 </div>
-                <button class="yt-btn action" onclick="openModal()">
-                    <i class="fas fa-plus"></i> Ajouter un client
-                </button>
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--yt-text-secondary);"></i>
+                        <input type="text" id="search-input" placeholder="Rechercher un client..." onkeyup="filterTable('search-input', 'table-utilisateurs')" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 250px;">
+                    </div>
+                    <button class="yt-btn action" onclick="openModal('modal')">
+                        <i class="fas fa-plus"></i> Nouveau Client
+                    </button>
+                </div>
             </div>
 
-            <!-- Table Clients -->
+            <!-- Table -->
             <div class="yt-table-container">
-                <table class="yt-table">
+                <table class="yt-table" id="table-utilisateurs">
                     <thead>
                         <tr>
                             <th>Client</th>
@@ -189,5 +193,6 @@ function submitEditClient(e) {
     });
 }
 </script>
+<div th:replace="layout :: chatbot"></div>
 </body>
 </html>

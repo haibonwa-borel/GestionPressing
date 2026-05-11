@@ -59,6 +59,13 @@
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
 		</dependency>
 
+		<!-- OpenHTMLToPDF pour générer la facture PDF -->
+		<dependency>
+			<groupId>com.openhtmltopdf</groupId>
+			<artifactId>openhtmltopdf-pdfbox</artifactId>
+			<version>1.0.10</version>
+		</dependency>
+
 		<!-- Validation (@NotBlank, @Size, @Min, @Email...) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -9,21 +9,25 @@
         <aside th:replace="layout :: sidebar"></aside>
         <main class="content-area">
 
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div>
-                    <h1 style="font-size: 24px; margin-bottom: 4px;">Commandes</h1>
-                    <p style="color: var(--yt-text-secondary); font-size: 14px;">
-                        <span th:text="${#lists.size(commandes)}">0</span> commande(s)
-                    </p>
+                    <h1 style="font-size: 24px; margin-bottom: 8px;">Gestion des Commandes</h1>
+                    <p style="color: var(--yt-text-secondary);">Gérez le flux de vos commandes de bout en bout.</p>
                 </div>
-                <button class="yt-btn action" onclick="openModal('modal-add-commande')">
-                    <i class="fas fa-plus"></i> Nouvelle commande
-                </button>
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--yt-text-secondary);"></i>
+                        <input type="text" id="search-commandes" placeholder="Rechercher une commande..." onkeyup="filterTable('search-commandes', 'table-commandes')" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 250px;">
+                    </div>
+                    <button class="yt-btn action" onclick="openModal('modal-add-commande')">
+                        <i class="fas fa-plus"></i> Nouvelle commande
+                    </button>
+                </div>
             </div>
 
             <!-- Table Commandes -->
             <div class="yt-table-container">
-                <table class="yt-table">
+                <table class="yt-table" id="table-commandes">
                     <thead>
                         <tr>
                             <th>#ID</th>
@@ -84,13 +88,17 @@
                                 th:text="${#temporals.format(c.dateLivraison, 'dd/MM/yy')}">-</td>
                             <td>
                                 <div style="display: flex; gap: 8px;">
+                                    <button class="yt-btn" style="padding: 6px 10px; font-size: 12px; background: var(--yt-surface-hover);"
+                                            th:onclick="'voirVetements(' + ${c.id} + ')'" title="Voir les vêtements">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                     <button class="yt-btn" style="padding: 6px 10px; font-size: 12px;"
-                                            th:onclick="openEditCommandeModal([[${c.id}]], [[${c.type}]], [[${c.statut}]], [[${c.utilisateurId}]])">
-                                        <i class="fas fa-pen"></i> Éditer
+                                            th:onclick="openEditCommandeModal([[${c.id}]], [[${c.type}]], [[${c.statut}]], [[${c.utilisateurId}]])" title="Éditer le statut">
+                                        <i class="fas fa-pen"></i>
                                     </button>
                                     <button class="yt-btn action" style="padding: 6px 10px; font-size: 12px;"
-                                            th:onclick="'envoyerFacture(' + ${c.id} + ')'">
-                                        <i class="fas fa-envelope"></i> Facture
+                                            th:onclick="'envoyerFacture(' + ${c.id} + ')'" title="Envoyer facture">
+                                        <i class="fas fa-envelope"></i>
                                     </button>
                                 </div>
                             </td>
@@ -100,6 +108,26 @@
             </div>
 
         </main>
+    </div>
+</div>
+
+<!-- Modal Détails Vêtements de la commande -->
+<div id="modal-vetements-commande" class="modal-overlay" style="z-index: 2500;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-tshirt" style="color: var(--yt-accent); margin-right: 8px;"></i>Vêtements de la commande <span id="span-cmd-id"></span></h2>
+            <button class="close-btn" onclick="closeModal('modal-vetements-commande')">×</button>
+        </div>
+        <div id="loader-vetements" style="text-align: center; padding: 20px; color: var(--yt-text-secondary); display: none;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
+            <p style="margin-top: 8px;">Chargement...</p>
+        </div>
+        <div id="liste-vetements-container" style="max-height: 400px; overflow-y: auto;">
+            <!-- Rempli dynamiquement en JS -->
+        </div>
+        <div style="margin-top: 24px; text-align: right;">
+            <button type="button" class="yt-btn" onclick="closeModal('modal-vetements-commande')">Fermer</button>
+        </div>
     </div>
 </div>
 
@@ -127,15 +155,21 @@
                 </select>
             </div>
             <div class="form-group">
-                <label>Vêtements (Maintenez Ctrl pour en sélectionner plusieurs)</label>
-                <select class="form-control" name="vetementIds" multiple style="height: 120px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="margin: 0;">Vêtements (Ctrl+Clic pour plusieurs)</label>
+                    <button type="button" class="yt-btn" style="padding: 4px 8px; font-size: 12px; background: transparent; border: 1px solid var(--yt-accent); color: var(--yt-accent);"
+                            onclick="openModal('modal-inline-vetement')">
+                        <i class="fas fa-plus"></i> Nouveau
+                    </button>
+                </div>
+                <select class="form-control" name="vetementIds" id="select-vetements" multiple style="height: 120px;">
                     <option th:each="v : ${vetements}" th:value="${v.id}" th:text="${v.description + ' (' + v.sku + ')'}"></option>
                 </select>
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
                 <button type="button" class="yt-btn" onclick="closeModal('modal-add-commande')">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-commande">
-                    <i class="fas fa-save"></i> Enregistrer
+                    <i class="fas fa-save"></i> Enregistrer la commande
                 </button>
             </div>
         </form>
@@ -179,6 +213,56 @@
     </div>
 </div>
 
+<!-- Sous-Modal Ajout Vêtement rapide -->
+<div id="modal-inline-vetement" class="modal-overlay" style="z-index: 3000;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-tshirt" style="color: var(--yt-accent); margin-right: 8px;"></i>Créer un vêtement</h2>
+            <button class="close-btn" onclick="closeModal('modal-inline-vetement')">×</button>
+        </div>
+        <form id="form-inline-vetement" onsubmit="submitInlineVetement(event)">
+            <div class="form-group">
+                <label>Description *</label>
+                <input class="form-control" type="text" name="description" required placeholder="Ex: Chemise">
+            </div>
+            <div class="form-group">
+                <label>Catégorie *</label>
+                <select class="form-control" name="categorie" required>
+                    <option value="CHEMISE">Chemise</option>
+                    <option value="PANTALON">Pantalon</option>
+                    <option value="ROBE">Robe</option>
+                    <option value="VESTE">Veste</option>
+                    <option value="MANTEAU">Manteau</option>
+                    <option value="JUPE">Jupe</option>
+                    <option value="TSHIRT">T-Shirt</option>
+                    <option value="COSTUME">Costume</option>
+                    <option value="AUTRE">Autre</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Couleur</label>
+                    <input class="form-control" type="text" name="couleur" placeholder="Ex: Bleu ciel">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Code Couleur (Hex)</label>
+                    <input class="form-control" type="color" name="codeCouleur" style="height: 40px; padding: 4px;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Photo</label>
+                <input class="form-control" type="file" name="file" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="yt-btn" onclick="closeModal('modal-inline-vetement')">Annuler</button>
+                <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-inline-vetement">
+                    <i class="fas fa-plus"></i> Ajouter au panier
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="toast" style="display:none; position:fixed; bottom:24px; right:24px;
      background:var(--yt-surface); border:1px solid var(--yt-border); border-radius:8px;
      padding:16px 24px; font-size:14px; z-index:9999; box-shadow: 0 4px 24px rgba(0,0,0,0.4);">
@@ -204,6 +288,54 @@ function closeModal(id) { document.getElementById(id).classList.remove('active')
 document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 });
+
+function voirVetements(id) {
+    document.getElementById('span-cmd-id').textContent = '#' + id;
+    const container = document.getElementById('liste-vetements-container');
+    const loader = document.getElementById('loader-vetements');
+    
+    container.innerHTML = '';
+    loader.style.display = 'block';
+    openModal('modal-vetements-commande');
+    
+    fetch('/api/commandes/' + id + '/vetements')
+        .then(res => {
+            if (!res.ok) throw new Error("Impossible de charger les vêtements");
+            return res.json();
+        })
+        .then(data => {
+            loader.style.display = 'none';
+            if (data.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color: var(--yt-text-secondary); padding: 20px;">Aucun vêtement associé à cette commande.</div>';
+                return;
+            }
+            
+            let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+            data.forEach(v => {
+                const colorCircle = v.codeCouleur 
+                    ? `<div style="width: 16px; height: 16px; border-radius: 50%; background: ${v.codeCouleur}; flex-shrink:0;"></div>` 
+                    : `<i class="fas fa-tshirt" style="color: var(--yt-text-secondary);"></i>`;
+                    
+                html += `
+                    <li style="display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--yt-border);">
+                        ${colorCircle}
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500; font-size: 14px;">${v.description}</div>
+                            <div style="font-size: 12px; color: var(--yt-text-secondary);">
+                                ${v.categorie} • SKU: <span style="font-family: monospace;">${v.sku}</span>
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+            html += '</ul>';
+            container.innerHTML = html;
+        })
+        .catch(err => {
+            loader.style.display = 'none';
+            container.innerHTML = `<div style="color: var(--yt-red); padding: 20px;">${err.message}</div>`;
+        });
+}
 
 function openEditCommandeModal(id, type, statut, utilisateurId) {
     document.getElementById('edit-cmd-id').value = id;
@@ -269,9 +401,56 @@ function submitCommande(e) {
     .catch(err => {
         alert("Erreur : " + err.message);
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer la commande';
+    });
+}
+
+function submitInlineVetement(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-inline-vetement');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création...';
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    
+    // Le backend attend "photo" au lieu de "file"
+    if(formData.has('file') && formData.get('file').size > 0) {
+        formData.append('photo', formData.get('file'));
+    }
+    formData.delete('file');
+    
+    fetch('/api/vetements', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Erreur lors de la création du vêtement");
+        return res.json();
+    })
+    .then(data => {
+        // Ajouter dynamiquement à la liste et le sélectionner
+        const select = document.getElementById('select-vetements');
+        const option = document.createElement('option');
+        option.value = data.id;
+        option.text = data.description + ' (' + data.sku + ')';
+        option.selected = true; // Auto-sélection
+        select.appendChild(option);
+        
+        showToast('✅ Vêtement ajouté !');
+        closeModal('modal-inline-vetement');
+        form.reset();
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Ajouter au panier';
+    })
+    .catch(err => {
+        alert("Erreur : " + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Ajouter au panier';
     });
 }
 </script>
+<div th:replace="layout :: chatbot"></div>
 </body>
 </html>

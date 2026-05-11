@@ -46,6 +46,16 @@ public class VetementController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PostMapping(value = "/api/vetements", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<VetementDTO> creer(
+            @Valid @ModelAttribute VetementDTO dto,
+            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+        
+        gererUploadPhoto(dto, photo);
+        VetementDTO cree = service.creer(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(cree);
+    }
+
     @PutMapping(value = "/api/vetements/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<VetementDTO> modifier(
             @PathVariable Long id,

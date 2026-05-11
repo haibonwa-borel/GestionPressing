@@ -115,7 +115,143 @@
                 });
             }
         });
+
+        // Global search function
+        function filterTable(inputId, containerId, isGrid = false) {
+            const input = document.getElementById(inputId);
+            const filter = input.value.toLowerCase();
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (isGrid) {
+                // Filter Grid items (cards)
+                const items = container.getElementsByClassName('card');
+                for (let i = 0; i < items.length; i++) {
+                    const text = items[i].textContent || items[i].innerText;
+                    items[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+                }
+            } else {
+                // Filter Table rows
+                const tr = container.getElementsByTagName("tr");
+                // Start from 1 to skip table header
+                for (let i = 1; i < tr.length; i++) {
+                    const text = tr[i].textContent || tr[i].innerText;
+                    // Skip if it's the "Empty" row placeholder
+                    if (tr[i].cells.length === 1 && tr[i].textContent.includes('Aucun')) continue;
+                    
+                    tr[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? "" : "none";
+                }
+            }
+        }
     </script>
+
+    <!-- Gemini Chatbot Fragment -->
+    <div th:fragment="chatbot">
+        <!-- Chatbot Button -->
+        <button id="chatbot-toggle-btn" style="position: fixed; bottom: 24px; right: 24px; width: 60px; height: 60px; border-radius: 50%; background: var(--yt-surface); border: 1px solid var(--yt-border); cursor: pointer; box-shadow: var(--shadow); z-index: 9999; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;">
+            <i class="fas fa-sparkles" style="color: #4285F4; font-size: 24px;"></i>
+        </button>
+
+        <!-- Chatbot Window -->
+        <div id="chatbot-window" style="display: none; position: fixed; bottom: 90px; right: 24px; width: 350px; height: 500px; background: var(--yt-surface); border: 1px solid var(--yt-border); border-radius: 12px; box-shadow: var(--shadow); z-index: 9999; flex-direction: column; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #4285F4, #9b72cb); padding: 16px; color: white; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-sparkles"></i>
+                    <span style="font-weight: 500;">Assistant IA (Gemini)</span>
+                </div>
+                <button id="chatbot-close-btn" style="background: transparent; border: none; color: white; cursor: pointer; font-size: 16px;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div id="chatbot-messages" style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+                <div style="align-self: flex-start; background: var(--yt-bg); padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 0; font-size: 14px; border: 1px solid var(--yt-border); max-width: 85%;">
+                    Bonjour ! Je suis l'assistant IA de votre pressing. Pour que je puisse vous aider, veuillez configurer votre clé API Gemini dans le code ou l'ajouter ici.
+                </div>
+            </div>
+            
+            <div style="padding: 12px; border-top: 1px solid var(--yt-border); background: var(--yt-bg); display: flex; gap: 8px;">
+                <input type="text" id="chatbot-input" placeholder="Posez votre question..." style="flex: 1; background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); border-radius: 20px; padding: 8px 16px; outline: none; font-size: 14px;">
+                <button id="chatbot-send-btn" style="background: #4285F4; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-paper-plane" style="font-size: 12px;"></i>
+                </button>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const toggleBtn = document.getElementById('chatbot-toggle-btn');
+                const closeBtn = document.getElementById('chatbot-close-btn');
+                const chatWindow = document.getElementById('chatbot-window');
+                const sendBtn = document.getElementById('chatbot-send-btn');
+                const chatInput = document.getElementById('chatbot-input');
+                const messagesContainer = document.getElementById('chatbot-messages');
+
+                // Toggle logic
+                toggleBtn.addEventListener('click', () => {
+                    chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+                });
+                closeBtn.addEventListener('click', () => {
+                    chatWindow.style.display = 'none';
+                });
+
+                function addMessage(text, isUser) {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.style.alignSelf = isUser ? 'flex-end' : 'flex-start';
+                    msgDiv.style.background = isUser ? '#4285F4' : 'var(--yt-bg)';
+                    msgDiv.style.color = isUser ? 'white' : 'var(--yt-text-primary)';
+                    msgDiv.style.padding = '10px 14px';
+                    msgDiv.style.borderRadius = '12px';
+                    msgDiv.style[isUser ? 'borderBottomRightRadius' : 'borderBottomLeftRadius'] = '0';
+                    msgDiv.style.fontSize = '14px';
+                    msgDiv.style.maxWidth = '85%';
+                    if(!isUser) msgDiv.style.border = '1px solid var(--yt-border)';
+                    msgDiv.textContent = text;
+                    messagesContainer.appendChild(msgDiv);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+
+                async function sendMessage() {
+                    const text = chatInput.value.trim();
+                    if (!text) return;
+
+                    addMessage(text, true);
+                    chatInput.value = '';
+                    
+                    // TODO: Remplacer par votre propre clé API Google Gemini !
+                    // Obtenez votre clé sur : https://aistudio.google.com/app/apikey
+                    const API_KEY = "VOTRE_CLE_API_GEMINI_ICI"; 
+                    
+                    if (API_KEY === "VOTRE_CLE_API_GEMINI_ICI") {
+                        setTimeout(() => addMessage("Veuillez ajouter votre clé API Gemini dans le fichier layout.html pour que je puisse fonctionner !", false), 500);
+                        return;
+                    }
+
+                    // Simulated call or Real call
+                    try {
+                        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: text }] }]
+                            })
+                        });
+                        const data = await response.json();
+                        if(data.candidates && data.candidates.length > 0) {
+                            addMessage(data.candidates[0].content.parts[0].text, false);
+                        } else {
+                            addMessage("Je n'ai pas pu générer de réponse.", false);
+                        }
+                    } catch(e) {
+                        addMessage("Erreur de connexion à Gemini API.", false);
+                    }
+                }
+
+                sendBtn.addEventListener('click', sendMessage);
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
+            });
+        </script>
+    </div>
 
 </body>
 </html>

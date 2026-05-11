@@ -9,21 +9,23 @@
         <aside th:replace="layout :: sidebar"></aside>
         <main class="content-area">
 
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div>
-                    <h1 style="font-size: 24px; margin-bottom: 4px;">Vêtements</h1>
-                    <p style="color: var(--yt-text-secondary); font-size: 14px;">
-                        <span th:text="${#lists.size(vetements)}">0</span> vêtement(s) enregistré(s)
-                    </p>
+                    <h1 style="font-size: 24px; margin-bottom: 8px;">Gestion des Vêtements</h1>
+                    <p style="color: var(--yt-text-secondary);">Inventaire de tous les vêtements enregistrés.</p>
                 </div>
                 <div style="display: flex; gap: 12px; align-items: center;">
+                    <div style="position: relative; margin-right: 8px;">
+                        <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--yt-text-secondary);"></i>
+                        <input type="text" id="search-vetements" placeholder="Rechercher un vêtement..." onkeyup="filterVetements()" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 220px;">
+                    </div>
                     <button class="yt-btn action" onclick="openModal('modal-add')">
-                        <i class="fas fa-plus"></i> Ajouter un vêtement
+                        <i class="fas fa-plus"></i> Nouveau Vêtement
                     </button>
                     <!-- Toggle View -->
                     <div style="display: flex; background: var(--yt-surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--yt-border);">
                         <button onclick="setView('grid')" id="btn-grid"
-                                style="padding: 8px 12px; background: var(--yt-accent); color: #000; border: none; cursor: pointer;">
+                                style="padding: 8px 12px; background: var(--yt-accent); color: #fff; border: none; cursor: pointer;">
                             <i class="fas fa-th"></i>
                         </button>
                         <button onclick="setView('list')" id="btn-list"
@@ -92,7 +94,7 @@
 
             <!-- Vue Liste -->
             <div id="view-list" style="display: none;" class="yt-table-container">
-                <table class="yt-table">
+                <table class="yt-table" id="table-vetements">
                     <thead>
                         <tr>
                             <th>SKU</th>
@@ -233,6 +235,11 @@
 </div>
 
 <script>
+function filterVetements() {
+    filterTable('search-vetements', 'view-grid', true);
+    filterTable('search-vetements', 'table-vetements', false);
+}
+
 function setView(view) {
     const grid = document.getElementById('view-grid');
     const list = document.getElementById('view-list');
@@ -330,5 +337,6 @@ function submitVetement(e) {
     });
 }
 </script>
+<div th:replace="layout :: chatbot"></div>
 </body>
 </html>

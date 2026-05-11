@@ -320,7 +320,7 @@ body {
 
 .yt-btn.action {
   background-color: var(--yt-accent);
-  color: #000;
+  color: #fff;
   border: none;
 }
 .yt-btn.action:hover {

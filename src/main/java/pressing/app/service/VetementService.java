@@ -36,6 +36,18 @@ public class VetementService {
     }
 
     /**
+     * Creer un vetement independant sans l'associer a une commande.
+     */
+    public VetementDTO creer(VetementDTO dto) {
+        Vetement entity = toEntity(dto);
+        if (entity.getSku() == null) {
+            entity.setSku(Vetement.genererSku());
+        }
+        Vetement saved = vetementRepository.save(entity);
+        return toDTO(saved);
+    }
+
+    /**
      * Creer un vetement et l'associer directement a une commande.
      */
     public VetementDTO creerPourCommande(Long commandeId, VetementDTO dto) {
