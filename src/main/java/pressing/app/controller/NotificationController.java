@@ -30,7 +30,7 @@ public class NotificationController {
             String html = """
                 <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: auto;
                             background: #f9f9f9; border-radius: 12px; padding: 30px; border: 1px solid #e0e0e0;">
-                    <h1 style="color: #3498db; text-align: center;">✅ Test Email Pressing App</h1>
+                    <h1 style="color: #3498db; text-align: center;"><i class="fas fa-check-circle"></i> Test Email Pressing App</h1>
                     <p style="font-size: 1.1em; color: #2c3e50;">Bonjour,</p>
                     <p>Ce mail confirme que la configuration email de votre application Spring Boot 
                        <b>Gestion de Pressing</b> fonctionne correctement.</p>
@@ -40,7 +40,7 @@ public class NotificationController {
                     </p>
                 </div>
                 """;
-            emailService.envoyerEmailHtml(to, "✅ Test - Configuration Email OK", html);
+            emailService.envoyerEmailHtml(to, "Test - Configuration Email OK", html);
             return ResponseEntity.ok("Mail de test envoyé avec succès à : " + to);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Erreur : " + e.getMessage());

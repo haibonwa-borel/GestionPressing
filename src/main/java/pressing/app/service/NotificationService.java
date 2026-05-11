@@ -42,7 +42,7 @@ public class NotificationService {
         Utilisateur client = utilisateurRepository.findById(commande.getUtilisateurId())
                 .orElseThrow(() -> new RuntimeException("Client non trouvé : " + commande.getUtilisateurId()));
 
-        String subject = "🧾 Facture de votre commande #" + commande.getId();
+        String subject = "Facture de votre commande #" + commande.getId();
         String html = genererHtmlFacture(commande, client);
         
         // Wrap for PDF generation (XHTML strict)
@@ -51,7 +51,7 @@ public class NotificationService {
         try {
             pdfBytes = genererPdfAPartirDeHtml(xhtml);
         } catch (Exception e) {
-            System.err.println("❌ Erreur de génération du PDF : " + e.getMessage());
+            System.err.println("Erreur de génération du PDF : " + e.getMessage());
         }
 
         if (pdfBytes != null) {
@@ -80,7 +80,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public void envoyerRappelsAutomatiques() {
         int count = declencherRappelsManuels();
-        System.out.println("⏰ Rappels automatiques envoyés : " + count);
+        System.out.println("Rappels automatiques envoyés : " + count);
     }
 
     /**
@@ -107,25 +107,33 @@ public class NotificationService {
         Utilisateur client = utilisateurRepository.findById(commande.getUtilisateurId()).orElse(null);
         if (client == null || client.getEmail() == null) return;
 
-        String subject = "⏰ Rappel : Votre commande est prête !";
+        String subject = "Rappel : Votre commande est prête !";
         String dateStr = commande.getDateLivraison() != null
                 ? commande.getDateLivraison().format(DateTimeFormatter.ofPattern("dd/MM/yyyy à HH:mm"))
                 : "bientôt";
 
         String html = String.format("""
-            <div style="font-family:'Segoe UI',Tahoma,sans-serif; max-width:600px; margin:auto;
-                        background:#212121; color:#f1f1f1; border-radius:12px; padding:30px; border:1px solid #3f3f3f;">
-                <h2 style="color:#3ea6ff;">⏰ Rappel de retrait</h2>
-                <p>Bonjour <b>%s</b>,</p>
-                <p>Votre commande <b>#%d</b> est prête et doit être retirée le :</p>
-                <div style="text-align:center; padding:15px; background:#0f0f0f; border-radius:8px;
-                            border:1px solid #3ea6ff; font-size:1.4em; font-weight:bold; color:#3ea6ff;">
-                    📅 %s
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+            </head>
+            <body>
+                <div style="font-family:'Segoe UI',Tahoma,sans-serif; max-width:600px; margin:auto;
+                            background:#212121; color:#f1f1f1; border-radius:12px; padding:30px; border:1px solid #3f3f3f;">
+                    <h2 style="color:#3ea6ff;"><i class="fas fa-bell"></i> Rappel de retrait</h2>
+                    <p>Bonjour <b>%s</b>,</p>
+                    <p>Votre commande <b>#%d</b> est prête et doit être retirée le :</p>
+                    <div style="text-align:center; padding:15px; background:#0f0f0f; border-radius:8px;
+                                border:1px solid #3ea6ff; font-size:1.4em; font-weight:bold; color:#3ea6ff;">
+                        <i class="fas fa-calendar-alt"></i> %s
+                    </div>
+                    <p style="margin-top:20px;">Merci de nous rendre visite dans les meilleurs délais.</p>
+                    <hr style="border:none; border-top:1px solid #3f3f3f; margin:20px 0;"/>
+                    <p style="color:#aaaaaa; font-size:0.85em;">L'équipe de votre Pressing</p>
                 </div>
-                <p style="margin-top:20px;">Merci de nous rendre visite dans les meilleurs délais.</p>
-                <hr style="border:none; border-top:1px solid #3f3f3f; margin:20px 0;"/>
-                <p style="color:#aaaaaa; font-size:0.85em;">L'équipe de votre Pressing</p>
-            </div>
+            </body>
+            </html>
             """, client.getPrenom(), commande.getId(), dateStr);
 
         emailService.envoyerEmailHtml(client.getEmail(), subject, html);
@@ -136,7 +144,7 @@ public class NotificationService {
         if (c.getVetements() != null) {
             for (Vetement v : c.getVetements()) {
                 String photoTag = (v.getPhotoUrl() != null && !v.getPhotoUrl().isEmpty()) 
-                    ? "<img src='http://localhost:8080" + v.getPhotoUrl() + "' style='width:40px;height:40px;object-fit:cover;border-radius:4px;' alt='photo'/>" 
+                    ? "<img src='" + v.getPhotoUrl() + "' style='width:40px;height:40px;object-fit:cover;border-radius:4px;' alt='photo'/>" 
                     : "-";
                     
                 itemsHtml.append(String.format(
@@ -164,7 +172,7 @@ public class NotificationService {
                 <!-- En-tête -->
                 <div style="background:#0f0f0f; border-bottom:1px solid #3f3f3f;
                             padding:30px; text-align:center; color:#f1f1f1;">
-                    <h1 style="margin:0; font-size:1.8em; color:#3ea6ff;">🧺 Pressing App</h1>
+                    <h1 style="margin:0; font-size:1.8em; color:#3ea6ff;"><i class="fas fa-tshirt"></i> Pressing App</h1>
                     <p style="margin:5px 0 0; color:#aaaaaa;">Facture #%d</p>
                 </div>
                 
@@ -177,21 +185,21 @@ public class NotificationService {
                     <table style="width:100%%; border-collapse:collapse; margin:20px 0;
                                   background:#0f0f0f; border-radius:8px; overflow:hidden; border:1px solid #3f3f3f;">
                         <tr>
-                            <td style="padding:10px 15px; border-bottom:1px solid #3f3f3f;"><b>📅 Date de dépôt</b></td>
+                            <td style="padding:10px 15px; border-bottom:1px solid #3f3f3f;"><b><i class="fas fa-calendar"></i> Date de dépôt</b></td>
                             <td style="padding:10px 15px; border-bottom:1px solid #3f3f3f; color:#aaaaaa;">%s</td>
                         </tr>
                         <tr>
-                            <td style="padding:10px 15px; border-bottom:1px solid #3f3f3f;"><b>🚀 Type de service</b></td>
+                            <td style="padding:10px 15px; border-bottom:1px solid #3f3f3f;"><b><i class="fas fa-truck"></i> Type de service</b></td>
                             <td style="padding:10px 15px; border-bottom:1px solid #3f3f3f; color:#aaaaaa;">%s</td>
                         </tr>
                         <tr>
-                            <td style="padding:10px 15px;"><b>📦 Date de retrait prévue</b></td>
+                            <td style="padding:10px 15px;"><b><i class="fas fa-box"></i> Date de retrait prévue</b></td>
                             <td style="padding:10px 15px; color:#2ba640; font-weight:bold;">%s</td>
                         </tr>
                     </table>
                     
                     <!-- Articles -->
-                    <h3 style="color:#3ea6ff;">🧥 Articles :</h3>
+                    <h3 style="color:#3ea6ff;"><i class="fas fa-list"></i> Articles :</h3>
                     <table style="width:100%%; border-collapse:collapse; margin-bottom:20px;">
                         <thead>
                             <tr style="background:#0f0f0f; color:#aaaaaa;">

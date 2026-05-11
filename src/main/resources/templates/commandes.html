@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="layout :: head('Commandes')"></head>
+<head th:replace="~{layout :: head('Commandes')}"></head>
 <body>
-<th:block th:replace="layout :: themeScript"></th:block>
+<th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
-    <header th:replace="layout :: header"></header>
+    <header th:replace="~{layout :: header}"></header>
     <div class="main-layout">
-        <aside th:replace="layout :: sidebar"></aside>
+        <aside th:replace="~{layout :: sidebar}"></aside>
         <main class="content-area">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -65,17 +65,17 @@
                             </td>
                             <td>
                                 <span th:switch="${c.type.name()}">
-                                    <span th:case="'EXPRESS'" style="color: var(--yt-red); font-weight: 500;">⚡ Express</span>
-                                    <span th:case="'RAPIDE'" style="color: orange; font-weight: 500;">🚀 Rapide</span>
-                                    <span th:case="*" style="color: var(--yt-text-secondary);">📦 Normal</span>
+                                    <span th:case="'EXPRESS'" style="color: var(--yt-red); font-weight: 500;"><i class="fas fa-bolt"></i> Express</span>
+                                    <span th:case="'RAPIDE'" style="color: orange; font-weight: 500;"><i class="fas fa-rocket"></i> Rapide</span>
+                                    <span th:case="*" style="color: var(--yt-text-secondary);"><i class="fas fa-box"></i> Normal</span>
                                 </span>
                             </td>
                             <td>
                                 <span th:switch="${c.statut.name()}"
                                       style="padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                    <span th:case="'EN_ATTENTE'" class="badge pending">⏳ En attente</span>
-                                    <span th:case="'EN_COURS'" class="badge processing">🔄 En cours</span>
-                                    <span th:case="'TERMINEE'" class="badge done">✅ Terminée</span>
+                                    <span th:case="'EN_ATTENTE'" class="badge pending"><i class="fas fa-clock"></i> En attente</span>
+                                    <span th:case="'EN_COURS'" class="badge processing"><i class="fas fa-sync-alt"></i> En cours</span>
+                                    <span th:case="'TERMINEE'" class="badge done"><i class="fas fa-check-circle"></i> Terminée</span>
                                     <span th:case="*" style="background: var(--yt-surface-hover); padding: 4px 10px; border-radius: 4px;" th:text="${c.statut}">-</span>
                                 </span>
                             </td>
@@ -99,6 +99,10 @@
                                     <button class="yt-btn action" style="padding: 6px 10px; font-size: 12px;"
                                             th:onclick="'envoyerFacture(' + ${c.id} + ')'" title="Envoyer facture">
                                         <i class="fas fa-envelope"></i>
+                                    </button>
+                                    <button class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);"
+                                            th:onclick="'supprimerCommande(' + ${c.id} + ')'" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
                             </td>
@@ -162,9 +166,12 @@
                         <i class="fas fa-plus"></i> Nouveau
                     </button>
                 </div>
-                <select class="form-control" name="vetementIds" id="select-vetements" multiple style="height: 120px;">
-                    <option th:each="v : ${vetements}" th:value="${v.id}" th:text="${v.description + ' (' + v.sku + ')'}"></option>
-                </select>
+                <div id="checkbox-vetements" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--yt-border); border-radius: 8px; padding: 8px; background: var(--yt-surface-hover);">
+                    <div th:each="v : ${vetements}" style="margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" name="vetementIds" th:value="${v.id}" th:id="'vet-' + ${v.id}">
+                        <label th:for="'vet-' + ${v.id}" th:text="${v.description + ' (' + v.sku + ')'}" style="cursor: pointer; font-size: 14px;"></label>
+                    </div>
+                </div>
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
                 <button type="button" class="yt-btn" onclick="closeModal('modal-add-commande')">Annuler</button>
@@ -271,7 +278,8 @@
 <script>
 function showToast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    if (!t) return;
+    t.innerHTML = msg;
     t.style.display = 'block';
     setTimeout(() => t.style.display = 'none', 4000);
 }
@@ -279,8 +287,8 @@ function showToast(msg) {
 function envoyerFacture(id) {
     fetch('/api/notifications/commandes/' + id + '/facture', { method: 'POST' })
         .then(res => res.text())
-        .then(data => showToast('✅ ' + data))
-        .catch(err => showToast('❌ Erreur : ' + err));
+        .then(data => showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + data))
+        .catch(err => showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err));
 }
 
 function openModal(id) { document.getElementById(id).classList.add('active'); }
@@ -384,25 +392,26 @@ function submitCommande(e) {
     
     const form = e.target;
     const formData = new FormData(form);
-    const data = new URLSearchParams(formData); 
+    const data = new URLSearchParams();
     
+    // Manual handling of multiple checkboxes for URLSearchParams
+    formData.forEach((value, key) => {
+        data.append(key, value);
+    });    
     fetch('/api/commandes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: data
     })
-    .then(res => {
-        if (!res.ok) throw new Error("Erreur de création");
-        return res.json();
-    })
-    .then(data => {
-        window.location.reload();
-    })
-    .catch(err => {
-        alert("Erreur : " + err.message);
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer la commande';
-    });
+        .then(res => {
+            if (!res.ok) throw new Error("Erreur serveur");
+            window.location.reload();
+        })
+        .catch(err => {
+            showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer la commande';
+        });
 }
 
 function submitInlineVetement(e) {
@@ -429,15 +438,18 @@ function submitInlineVetement(e) {
         return res.json();
     })
     .then(data => {
-        // Ajouter dynamiquement à la liste et le sélectionner
-        const select = document.getElementById('select-vetements');
-        const option = document.createElement('option');
-        option.value = data.id;
-        option.text = data.description + ' (' + data.sku + ')';
-        option.selected = true; // Auto-sélection
-        select.appendChild(option);
+        // Ajouter dynamiquement à la liste des checkboxes
+        const container = document.getElementById('checkbox-vetements');
+        const div = document.createElement('div');
+        div.style.cssText = "margin-bottom: 6px; display: flex; align-items: center; gap: 8px;";
         
-        showToast('✅ Vêtement ajouté !');
+        div.innerHTML = `
+            <input type="checkbox" name="vetementIds" value="${data.id}" id="vet-${data.id}" checked>
+            <label for="vet-${data.id}" style="cursor: pointer; font-size: 14px;">${data.description} (${data.sku})</label>
+        `;
+        container.appendChild(div);
+        
+        showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> Vêtement ajouté !');
         closeModal('modal-inline-vetement');
         form.reset();
         
@@ -450,7 +462,15 @@ function submitInlineVetement(e) {
         btn.innerHTML = '<i class="fas fa-plus"></i> Ajouter au panier';
     });
 }
+function supprimerCommande(id) {
+    if (!confirm("Voulez-vous vraiment supprimer cette commande ?")) return;
+    fetch('/api/commandes/' + id, { method: 'DELETE' })
+        .then(res => {
+            if (res.ok) window.location.reload();
+            else alert("Erreur lors de la suppression");
+        });
+}
 </script>
-<div th:replace="layout :: chatbot"></div>
+<div th:replace="~{layout :: chatbot}"></div>
 </body>
 </html>

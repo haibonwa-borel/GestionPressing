@@ -29,9 +29,9 @@ public class EmailService {
             helper.setFrom("Contact@zevaba.com");
 
             mailSender.send(message);
-            System.out.println("✅ Email envoyé avec succès à : " + to);
+            System.out.println("Email envoyé avec succès à : " + to);
         } catch (MessagingException e) {
-            System.err.println("❌ Erreur lors de l'envoi de l'email : " + e.getMessage());
+            System.err.println("Erreur lors de l'envoi de l'email : " + e.getMessage());
             throw new RuntimeException("Erreur envoi email : " + e.getMessage(), e);
         }
     }
@@ -52,9 +52,9 @@ public class EmailService {
             }
 
             mailSender.send(message);
-            System.out.println("✅ Email avec pièce jointe envoyé avec succès à : " + to);
+            System.out.println("Email avec pièce jointe envoyé avec succès à : " + to);
         } catch (MessagingException e) {
-            System.err.println("❌ Erreur lors de l'envoi de l'email avec PJ : " + e.getMessage());
+            System.err.println("Erreur lors de l'envoi de l'email avec PJ : " + e.getMessage());
             throw new RuntimeException("Erreur envoi email avec PJ : " + e.getMessage(), e);
         }
     }

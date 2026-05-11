@@ -12,5 +12,7 @@ public enum CategorieVetement {
     JUPE,
     TSHIRT,
     COSTUME,
+    HAUT,
+    BAS,
     AUTRE
 }

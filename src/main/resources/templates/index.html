@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="layout :: head('Accueil')"></head>
+<head th:replace="~{layout :: head('Accueil')}"></head>
 <body>
-<th:block th:replace="layout :: themeScript"></th:block>
+<th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
-    <header th:replace="layout :: header"></header>
+    <header th:replace="~{layout :: header}"></header>
     <div class="main-layout">
-        <aside th:replace="layout :: sidebar"></aside>
+        <aside th:replace="~{layout :: sidebar}"></aside>
         <main class="content-area">
 
             <h1 style="font-size: 24px; margin-bottom: 8px;">Vue d'ensemble</h1>
@@ -91,7 +91,7 @@
 <script>
 function showToast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
+    t.innerHTML = msg;
     t.style.display = 'block';
     setTimeout(() => t.style.display = 'none', 4000);
 }
@@ -102,14 +102,14 @@ function declencherRappels() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
     fetch('/api/notifications/rappels/declencher', { method: 'POST' })
         .then(res => res.text())
-        .then(data => { showToast('✅ ' + data); })
-        .catch(err => { showToast('❌ Erreur : ' + err); })
+        .then(data => { showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + data); })
+        .catch(err => { showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err); })
         .finally(() => {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-bell"></i> Envoyer rappels 24h';
         });
 }
 </script>
-<div th:replace="layout :: chatbot"></div>
+<div th:replace="~{layout :: chatbot}"></div>
 </body>
 </html>

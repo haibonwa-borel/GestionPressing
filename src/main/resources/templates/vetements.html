@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="layout :: head('Vêtements')"></head>
+<head th:replace="~{layout :: head('Vêtements')}"></head>
 <body>
-<th:block th:replace="layout :: themeScript"></th:block>
+<th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
-    <header th:replace="layout :: header"></header>
+    <header th:replace="~{layout :: header}"></header>
     <div class="main-layout">
-        <aside th:replace="layout :: sidebar"></aside>
+        <aside th:replace="~{layout :: sidebar}"></aside>
         <main class="content-area">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -17,8 +17,23 @@
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <div style="position: relative; margin-right: 8px;">
                         <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--yt-text-secondary);"></i>
-                        <input type="text" id="search-vetements" placeholder="Rechercher un vêtement..." onkeyup="filterVetements()" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 220px;">
+                        <input type="text" id="search-vetements" placeholder="Recherche texte..." onkeyup="filterVetements()" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 160px;">
                     </div>
+                    
+                    <select id="filter-cat" onchange="filterVetements()" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px; border-radius: 18px; outline: none; margin-right: 8px;">
+                        <option value="">Toutes catégories</option>
+                        <option value="CHEMISE">Chemise</option>
+                        <option value="PANTALON">Pantalon</option>
+                        <option value="ROBE">Robe</option>
+                        <option value="VESTE">Veste</option>
+                        <option value="MANTEAU">Manteau</option>
+                        <option value="JUPE">Jupe</option>
+                        <option value="TSHIRT">T-Shirt</option>
+                        <option value="COSTUME">Costume</option>
+                        <option value="HAUT">Haut</option>
+                        <option value="BAS">Bas</option>
+                        <option value="AUTRE">Autre</option>
+                    </select>
                     <button class="yt-btn action" onclick="openModal('modal-add')">
                         <i class="fas fa-plus"></i> Nouveau Vêtement
                     </button>
@@ -60,11 +75,14 @@
                                th:style="'font-size: 48px; color: ' + (${v.codeCouleur} ?: '#aaa')"></i>
                         </div>
                         
-                        <!-- Overlay actions -->
                         <div style="position: absolute; top: 8px; right: 8px; display: flex; gap: 4px;">
                             <button class="yt-btn" style="padding: 6px; font-size: 12px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none;"
                                     th:onclick="openEditVetementModal([[${v.id}]], [[${v.description}]], [[${v.categorie}]], [[${v.couleur}]], [[${v.codeCouleur}]])">
                                 <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="yt-btn" style="padding: 6px; font-size: 12px; border-radius: 50%; background: rgba(255,0,0,0.6); color: white; border: none;"
+                                    th:onclick="'supprimerVetement(' + ${v.id} + ')'">
+                                <i class="fas fa-trash"></i>
                             </button>
                         </div>
 
@@ -117,11 +135,14 @@
                                          th:style="'width: 16px; height: 16px; border-radius: 50%; background: ' + ${v.codeCouleur}"></div>
                                     <span th:text="${v.couleur ?: '-'}">-</span>
                                 </div>
-                            </td>
                             <td>
                                 <button class="yt-btn" style="padding: 4px 8px; font-size: 12px;"
                                         th:onclick="openEditVetementModal([[${v.id}]], [[${v.description}]], [[${v.categorie}]], [[${v.couleur}]], [[${v.codeCouleur}]])">
                                     <i class="fas fa-pen"></i>
+                                </button>
+                                <button class="yt-btn" style="padding: 4px 8px; font-size: 12px; color: var(--yt-red);"
+                                        th:onclick="'supprimerVetement(' + ${v.id} + ')'">
+                                    <i class="fas fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
@@ -156,6 +177,8 @@
                     <option value="JUPE">Jupe</option>
                     <option value="TSHIRT">T-Shirt</option>
                     <option value="COSTUME">Costume</option>
+                    <option value="HAUT">Haut</option>
+                    <option value="BAS">Bas</option>
                     <option value="AUTRE">Autre</option>
                 </select>
             </div>
@@ -207,6 +230,8 @@
                     <option value="JUPE">Jupe</option>
                     <option value="TSHIRT">T-Shirt</option>
                     <option value="COSTUME">Costume</option>
+                    <option value="HAUT">Haut</option>
+                    <option value="BAS">Bas</option>
                     <option value="AUTRE">Autre</option>
                 </select>
             </div>
@@ -236,8 +261,47 @@
 
 <script>
 function filterVetements() {
-    filterTable('search-vetements', 'view-grid', true);
-    filterTable('search-vetements', 'table-vetements', false);
+    const textFilter = document.getElementById('search-vetements').value.toLowerCase();
+    const catFilter = document.getElementById('filter-cat').value.toLowerCase();
+
+    // Filtrer la vue grille
+    const gridItems = document.getElementById('view-grid').getElementsByClassName('card');
+    for (let i = 0; i < gridItems.length; i++) {
+        const text = gridItems[i].textContent || gridItems[i].innerText;
+        const badges = gridItems[i].getElementsByTagName('span');
+        let catBadge = "";
+        // Find the category badge (usually the last span with absolute positioning)
+        for(let j = 0; j < badges.length; j++) {
+            if(badges[j].style.position === 'absolute') {
+                catBadge = badges[j].textContent.toLowerCase();
+            }
+        }
+        
+        const matchesText = text.toLowerCase().indexOf(textFilter) > -1;
+        const matchesCat = catFilter === "" || catBadge === catFilter;
+        
+        gridItems[i].style.display = (matchesText && matchesCat) ? "" : "none";
+    }
+
+    // Filtrer la vue liste
+    const tr = document.getElementById('table-vetements').getElementsByTagName("tr");
+    for (let i = 1; i < tr.length; i++) {
+        const text = tr[i].textContent || tr[i].innerText;
+        if (tr[i].cells.length === 1 && tr[i].textContent.includes('Aucun')) continue;
+        
+        const catCell = tr[i].cells[2].textContent.trim().toLowerCase();
+        
+        const matchesText = text.toLowerCase().indexOf(textFilter) > -1;
+        const matchesCat = catFilter === "" || catCell === catFilter;
+        
+        tr[i].style.display = (matchesText && matchesCat) ? "" : "none";
+    }
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.innerHTML = msg;
 }
 
 function setView(view) {
@@ -336,7 +400,16 @@ function submitVetement(e) {
         btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
     });
 }
+
+function supprimerVetement(id) {
+    if (!confirm("Voulez-vous vraiment supprimer cet article ?")) return;
+    fetch('/api/vetements/' + id, { method: 'DELETE' })
+        .then(res => {
+            if (res.ok) window.location.reload();
+            else alert("Erreur lors de la suppression");
+        });
+}
 </script>
-<div th:replace="layout :: chatbot"></div>
+<div th:replace="~{layout :: chatbot}"></div>
 </body>
 </html>

@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="layout :: head('Clients')"></head>
+<head th:replace="~{layout :: head('Clients')}"></head>
 <body>
-<th:block th:replace="layout :: themeScript"></th:block>
+<th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
-    <header th:replace="layout :: header"></header>
+    <header th:replace="~{layout :: header}"></header>
     <div class="main-layout">
-        <aside th:replace="layout :: sidebar"></aside>
+        <aside th:replace="~{layout :: sidebar}"></aside>
         <main class="content-area">
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -62,10 +62,13 @@
                                 <span style="background: var(--yt-surface-hover); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;"
                                       th:text="'#' + ${u.id}">-</span>
                             </td>
-                            <td>
                                 <button class="yt-btn" style="padding: 6px 10px; font-size: 12px;"
                                         th:onclick="openEditModal([[${u.id}]], [[${u.nom}]], [[${u.prenom}]], [[${u.email}]], [[${u.telephone}]])">
                                     <i class="fas fa-pen"></i> Éditer
+                                </button>
+                                <button class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);"
+                                        th:onclick="'supprimerUtilisateur(' + ${u.id} + ')'">
+                                    <i class="fas fa-trash"></i> Supprimer
                                 </button>
                             </td>
                         </tr>
