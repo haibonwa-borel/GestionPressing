@@ -62,6 +62,7 @@
                                 <span style="background: var(--yt-surface-hover); padding: 4px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;"
                                       th:text="'#' + ${u.id}">-</span>
                             </td>
+                            <td>
                                 <button class="yt-btn" style="padding: 6px 10px; font-size: 12px;"
                                         th:onclick="openEditModal([[${u.id}]], [[${u.nom}]], [[${u.prenom}]], [[${u.email}]], [[${u.telephone}]])">
                                     <i class="fas fa-pen"></i> Éditer
@@ -87,7 +88,7 @@
             <h2><i class="fas fa-user-plus" style="color: var(--yt-accent); margin-right: 8px;"></i>Nouveau client</h2>
             <button class="close-btn" onclick="closeModal('modal')">×</button>
         </div>
-        <form th:action="@{/utilisateurs}" method="post">
+        <form id="form-add-client" onsubmit="submitClient(event)">
             <div class="form-group">
                 <label>Prénom *</label>
                 <input class="form-control" type="text" name="prenom" required placeholder="Jean">
@@ -167,6 +168,36 @@ function openEditModal(id, nom, prenom, email, telephone) {
     document.getElementById('edit-email').value = email;
     document.getElementById('edit-telephone').value = telephone || '';
     openModal('modal-edit');
+}
+
+function submitClient(e) {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type="submit"]');
+    const originalContent = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = new URLSearchParams(formData);
+
+    fetch('/api/utilisateurs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: data
+    })
+    .then(async res => {
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || errData.error || "Erreur de création");
+        }
+        window.location.reload();
+    })
+    .catch(err => {
+        alert("Erreur : " + err.message);
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+    });
 }
 
 function submitEditClient(e) {

@@ -65,7 +65,7 @@ public class ChatController {
         context.append("\n--- COMMANDES ---\n");
         commandeRepository.findAll().forEach(c -> 
             context.append(String.format("ID: %d | Client_ID: %d | Type: %s | Statut: %s | Prix: %.2f | Créée: %s | Livraison: %s\n", 
-                c.getId(), c.getUtilisateur() != null ? c.getUtilisateur().getId() : null, c.getType(), c.getStatut(), c.getPrixTotal(), c.getDateCreation(), c.getDateLivraison()))
+                c.getId(), c.getUtilisateurId(), c.getType(), c.getStatut(), c.getPrixTotal(), c.getDateCreation(), c.getDateLivraison()))
         );
 
         context.append("\nRéponds de manière concise et professionnelle aux questions de l'utilisateur en te basant UNIQUEMENT sur ces données. Si tu ne trouves pas l'information dans ces données, dis-le.");
@@ -93,7 +93,9 @@ public class ChatController {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(geminiRequest, headers);
 
         try {
-            return restTemplate.postForObject(url, entity, Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
+            return response;
         } catch (Exception e) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Erreur lors de l'appel à Gemini : " + e.getMessage());

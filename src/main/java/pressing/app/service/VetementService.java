@@ -24,14 +24,11 @@ import java.util.stream.Collectors;
 public class VetementService {
 
     private final VetementRepository vetementRepository;
-    private final CommandeRepository commandeRepository;
     private final CommandeService commandeService;
 
     public VetementService(VetementRepository vetementRepository,
-                           CommandeRepository commandeRepository,
                            CommandeService commandeService) {
         this.vetementRepository = vetementRepository;
-        this.commandeRepository = commandeRepository;
         this.commandeService = commandeService;
     }
 
