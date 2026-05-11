@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout :: head('Accueil')}"></head>
+<head th:replace="~{layout :: head(#{dashboard.title})}"></head>
 <body>
 <th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
@@ -9,8 +9,8 @@
         <aside th:replace="~{layout :: sidebar}"></aside>
         <main class="content-area">
 
-            <h1 style="font-size: 24px; margin-bottom: 8px;">Vue d'ensemble</h1>
-            <p style="color: var(--yt-text-secondary); margin-bottom: 32px;">
+            <h1 style="font-size: 24px; margin-bottom: 8px;" th:text="#{dashboard.title}">Vue d'ensemble</h1>
+            <p style="color: var(--yt-text-secondary); margin-bottom: 32px;" th:text="#{dashboard.welcome}">
                 Bienvenue sur votre tableau de bord Pressing App
             </p>
 
@@ -20,7 +20,7 @@
                     <div class="stat-card" style="background: var(--yt-surface); padding: 24px; border-radius: 12px; border: 1px solid var(--yt-border); transition: border-color 0.2s;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                             <div>
-                                <p style="color: var(--yt-text-secondary); font-size: 13px; margin-bottom: 10px;">TOTAL CLIENTS</p>
+                                <p style="color: var(--yt-text-secondary); font-size: 13px; margin-bottom: 10px;" th:text="#{dashboard.totalClients}">TOTAL CLIENTS</p>
                                 <p style="font-size: 36px; font-weight: 700;" th:text="${totalClients}">0</p>
                             </div>
                             <div style="background: rgba(62,166,255,0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -33,7 +33,7 @@
                     <div class="stat-card" style="background: var(--yt-surface); padding: 24px; border-radius: 12px; border: 1px solid var(--yt-border); transition: border-color 0.2s;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                             <div>
-                                <p style="color: var(--yt-text-secondary); font-size: 13px; margin-bottom: 10px;">COMMANDES</p>
+                                <p style="color: var(--yt-text-secondary); font-size: 13px; margin-bottom: 10px;" th:text="#{dashboard.totalOrders}">COMMANDES</p>
                                 <p style="font-size: 36px; font-weight: 700;" th:text="${totalCommandes}">0</p>
                             </div>
                             <div style="background: rgba(255,0,0,0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -46,7 +46,7 @@
                     <div class="stat-card" style="background: var(--yt-surface); padding: 24px; border-radius: 12px; border: 1px solid var(--yt-border); transition: border-color 0.2s;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                             <div>
-                                <p style="color: var(--yt-text-secondary); font-size: 13px; margin-bottom: 10px;">VÊTEMENTS</p>
+                                <p style="color: var(--yt-text-secondary); font-size: 13px; margin-bottom: 10px;" th:text="#{dashboard.totalClothes}">VÊTEMENTS</p>
                                 <p style="font-size: 36px; font-weight: 700;" th:text="${totalVetements}">0</p>
                             </div>
                             <div style="background: rgba(43,166,64,0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
@@ -58,19 +58,19 @@
             </div>
 
             <!-- Actions rapides -->
-            <h2 style="font-size: 18px; font-weight: 500; margin-top: 40px; margin-bottom: 16px;">Actions rapides</h2>
+            <h2 style="font-size: 18px; font-weight: 500; margin-top: 40px; margin-bottom: 16px;" th:text="#{dashboard.quickActions}">Actions rapides</h2>
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
                 <a href="/commandes" class="yt-btn action">
-                    <i class="fas fa-plus"></i> Nouvelle commande
+                    <i class="fas fa-plus"></i> <span th:text="#{dashboard.newOrder}">Nouvelle commande</span>
                 </a>
                 <a href="/utilisateurs" class="yt-btn">
-                    <i class="fas fa-user-plus"></i> Ajouter un client
+                    <i class="fas fa-user-plus"></i> <span th:text="#{dashboard.addClient}">Ajouter un client</span>
                 </a>
                 <a href="/vetements" class="yt-btn">
-                    <i class="fas fa-plus"></i> Ajouter un vêtement
+                    <i class="fas fa-plus"></i> <span th:text="#{dashboard.addCloth}">Ajouter un vêtement</span>
                 </a>
                 <button class="yt-btn" onclick="declencherRappels()" id="btn-rappels">
-                    <i class="fas fa-bell"></i> Envoyer rappels 24h
+                    <i class="fas fa-bell"></i> <span th:text="#{dashboard.sendReminders}">Envoyer rappels 24h</span>
                 </button>
             </div>
 
@@ -88,27 +88,30 @@
     .stat-card:hover { border-color: var(--yt-accent) !important; }
 </style>
 
-<script>
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.innerHTML = msg;
-    t.style.display = 'block';
-    setTimeout(() => t.style.display = 'none', 4000);
-}
+<script th:inline="javascript">
+    const sendingText = /*[[#{dashboard.sending}]]*/ 'Envoi...';
+    const remindersText = /*[[#{dashboard.sendReminders}]]*/ 'Envoyer rappels 24h';
 
-function declencherRappels() {
-    const btn = document.getElementById('btn-rappels');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
-    fetch('/api/notifications/rappels/declencher', { method: 'POST' })
-        .then(res => res.text())
-        .then(data => { showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + data); })
-        .catch(err => { showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err); })
-        .finally(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-bell"></i> Envoyer rappels 24h';
-        });
-}
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerHTML = msg;
+        t.style.display = 'block';
+        setTimeout(() => t.style.display = 'none', 4000);
+    }
+
+    function declencherRappels() {
+        const btn = document.getElementById('btn-rappels');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + sendingText;
+        fetch('/api/notifications/rappels/declencher', { method: 'POST' })
+            .then(res => res.text())
+            .then(data => { showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + data); })
+            .catch(err => { showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err); })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bell"></i> ' + remindersText;
+            });
+    }
 </script>
 <div th:replace="~{layout :: chatbot}"></div>
 </body>

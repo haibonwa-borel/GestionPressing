@@ -19,9 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
         String uploadPath = uploadDir.toFile().getAbsolutePath();
 
         // Mappe les requêtes /uploads/** vers le dossier physique "uploads"
-        if (uploadDir.toFile().isDirectory()) {
-            registry.addResourceHandler("/uploads/**")
-                    .addResourceLocations("file:" + uploadPath + "/");
-        }
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath + "/");
     }
 }

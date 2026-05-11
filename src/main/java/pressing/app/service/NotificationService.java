@@ -12,27 +12,35 @@ import pressing.app.repository.UtilisateurRepository;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Service pour la gestion des notifications (Factures et Rappels).
+ * La generation du PDF et l'envoi du mail sont separes et asynchrones.
  */
 @Service
 public class NotificationService {
 
     private final EmailService emailService;
+    private final PdfService pdfService;
     private final CommandeRepository commandeRepository;
     private final UtilisateurRepository utilisateurRepository;
 
     public NotificationService(EmailService emailService,
+                               PdfService pdfService,
                                CommandeRepository commandeRepository,
                                UtilisateurRepository utilisateurRepository) {
         this.emailService = emailService;
+        this.pdfService = pdfService;
         this.commandeRepository = commandeRepository;
         this.utilisateurRepository = utilisateurRepository;
     }
 
     /**
-     * Genere et envoie la facture d'une commande par mail avec la pièce jointe PDF.
+     * Genere et envoie la facture d'une commande.
+     * Etape 1 : Generation du PDF (asynchrone dans un thread separe)
+     * Etape 2 : Envoi du mail avec le PDF en piece jointe (asynchrone dans un autre thread)
+     * Les deux etapes sont chainees avec CompletableFuture.
      */
     @Transactional(readOnly = true)
     public void envoyerFacture(Long commandeId) {
@@ -44,32 +52,27 @@ public class NotificationService {
 
         String subject = "Facture de votre commande #" + commande.getId();
         String html = genererHtmlFacture(commande, client);
-        
-        // Wrap for PDF generation (XHTML strict)
-        String xhtml = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"/></head><body>" + html + "</body></html>";
-        byte[] pdfBytes = null;
-        try {
-            pdfBytes = genererPdfAPartirDeHtml(xhtml);
-        } catch (Exception e) {
-            System.err.println("Erreur de génération du PDF : " + e.getMessage());
-        }
+        String nomFichier = "Facture_Commande_" + commande.getId() + ".pdf";
 
-        if (pdfBytes != null) {
-            emailService.envoyerEmailHtmlAvecPieceJointe(client.getEmail(), subject, html, pdfBytes, "Facture_Commande_" + commande.getId() + ".pdf");
-        } else {
-            emailService.envoyerEmailHtml(client.getEmail(), subject, html);
-        }
-    }
+        System.out.println("[NotificationService] Lancement generation PDF async pour commande #" + commandeId);
 
-    private byte[] genererPdfAPartirDeHtml(String xhtml) throws Exception {
-        try (java.io.ByteArrayOutputStream os = new java.io.ByteArrayOutputStream()) {
-            com.openhtmltopdf.pdfboxout.PdfRendererBuilder builder = new com.openhtmltopdf.pdfboxout.PdfRendererBuilder();
-            builder.useFastMode();
-            builder.withHtmlContent(xhtml, "http://localhost:8080/");
-            builder.toStream(os);
-            builder.run();
-            return os.toByteArray();
-        }
+        // Etape 1 : Generer le PDF de maniere asynchrone
+        CompletableFuture<byte[]> futurePdf = pdfService.genererPdfAsync(html, "Facture #" + commande.getId());
+
+        // Etape 2 : Une fois le PDF genere, envoyer le mail de maniere asynchrone
+        futurePdf.thenAccept(pdfBytes -> {
+            System.out.println("[NotificationService] PDF pret, lancement envoi email async pour commande #" + commandeId);
+            if (pdfBytes != null) {
+                emailService.envoyerEmailHtmlAvecPieceJointeAsync(client.getEmail(), subject, html, pdfBytes, nomFichier);
+            } else {
+                // Fallback : envoyer le mail sans PDF si la generation a echoue
+                System.out.println("[NotificationService] PDF null, envoi email sans piece jointe");
+                emailService.envoyerEmailHtmlAsync(client.getEmail(), subject, html);
+            }
+        }).exceptionally(ex -> {
+            System.err.println("[NotificationService] Erreur lors du pipeline facture : " + ex.getMessage());
+            return null;
+        });
     }
 
     /**

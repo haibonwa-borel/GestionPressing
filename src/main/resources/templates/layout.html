@@ -3,7 +3,7 @@
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title} + ' - Pressing App'">Pressing App</title>
+    <title th:text="${title} + ' - ' + #{app.name}">Pressing App</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
@@ -27,8 +27,33 @@
             </a>
         </div>
         <div class="header-right" style="display: flex; align-items: center; gap: 8px;">
+            <!-- Language Switcher -->
+            <div class="lang-switcher" style="position: relative;">
+                <button class="menu-btn" id="lang-toggle" th:title="#{header.lang}"
+                        style="display: flex; align-items: center; gap: 4px; font-size: 13px; padding: 6px 10px;">
+                    <i class="fas fa-globe"></i>
+                    <span id="lang-label" style="font-weight: 500;">FR</span>
+                    <i class="fas fa-chevron-down" style="font-size: 10px;"></i>
+                </button>
+                <div id="lang-dropdown" style="display:none; position: absolute; top: 42px; right: 0;
+                     background: var(--yt-surface); border: 1px solid var(--yt-border); border-radius: 8px;
+                     box-shadow: 0 4px 16px rgba(0,0,0,0.3); overflow: hidden; min-width: 140px; z-index: 9999;">
+                    <a href="?lang=fr" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+                       color: var(--yt-text-primary); text-decoration: none; font-size: 13px; transition: background 0.15s;"
+                       onmouseover="this.style.background='var(--yt-surface-hover)'"
+                       onmouseout="this.style.background='transparent'">
+                        <span style="font-size: 18px;">🇫🇷</span> Français
+                    </a>
+                    <a href="?lang=en" style="display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+                       color: var(--yt-text-primary); text-decoration: none; font-size: 13px; transition: background 0.15s;"
+                       onmouseover="this.style.background='var(--yt-surface-hover)'"
+                       onmouseout="this.style.background='transparent'">
+                        <span style="font-size: 18px;">🇬🇧</span> English
+                    </a>
+                </div>
+            </div>
             <!-- Theme Toggle Button -->
-            <button class="menu-btn theme-toggle-btn" id="theme-toggle" title="Changer le thème"
+            <button class="menu-btn theme-toggle-btn" id="theme-toggle" th:title="#{header.theme}"
                     onclick="toggleTheme()">
                 <i class="fas fa-moon" id="theme-icon"></i>
             </button>
@@ -43,38 +68,38 @@
             <li class="nav-item">
                 <a href="/" class="nav-link" th:classappend="${activeMenu == 'home'} ? 'active'">
                     <i class="fas fa-home nav-icon"></i>
-                    <span>Accueil</span>
+                    <span th:text="#{nav.home}">Accueil</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/utilisateurs" class="nav-link" th:classappend="${activeMenu == 'utilisateurs'} ? 'active'">
                     <i class="fas fa-users nav-icon"></i>
-                    <span>Clients</span>
+                    <span th:text="#{nav.clients}">Clients</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/commandes" class="nav-link" th:classappend="${activeMenu == 'commandes'} ? 'active'">
                     <i class="fas fa-shopping-bag nav-icon"></i>
-                    <span>Commandes</span>
+                    <span th:text="#{nav.orders}">Commandes</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="/vetements" class="nav-link" th:classappend="${activeMenu == 'vetements'} ? 'active'">
                     <i class="fas fa-tags nav-icon"></i>
-                    <span>Vêtements</span>
+                    <span th:text="#{nav.clothes}">Vêtements</span>
                 </a>
             </li>
             <li style="margin: 12px 0; border-top: 1px solid var(--yt-border);"></li>
             <li class="nav-item">
                 <a href="/swagger-ui.html" target="_blank" class="nav-link">
                     <i class="fas fa-code nav-icon"></i>
-                    <span>API Docs</span>
+                    <span th:text="#{nav.api}">API Docs</span>
                 </a>
             </li>
         </ul>
     </aside>
 
-    <!-- Global Theme + Sidebar Script (included in every page) -->
+    <!-- Global Theme + Sidebar + Language Script (included in every page) -->
     <script th:fragment="themeScript">
         // Theme
         function toggleTheme() {
@@ -114,6 +139,27 @@
                     if (content) content.classList.toggle('sidebar-collapsed');
                 });
             }
+
+            // Language dropdown toggle
+            const langToggle = document.getElementById('lang-toggle');
+            const langDropdown = document.getElementById('lang-dropdown');
+            if (langToggle && langDropdown) {
+                langToggle.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    langDropdown.style.display = langDropdown.style.display === 'none' ? 'block' : 'none';
+                });
+                document.addEventListener('click', function () {
+                    langDropdown.style.display = 'none';
+                });
+            }
+
+            // Detect current language from URL or cookie and update label
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentLang = urlParams.get('lang');
+            const langLabel = document.getElementById('lang-label');
+            if (langLabel && currentLang) {
+                langLabel.textContent = currentLang.toUpperCase();
+            }
         });
 
         // Global search function
@@ -136,9 +182,6 @@
                 // Start from 1 to skip table header
                 for (let i = 1; i < tr.length; i++) {
                     const text = tr[i].textContent || tr[i].innerText;
-                    // Skip if it's the "Empty" row placeholder
-                    if (tr[i].cells.length === 1 && tr[i].textContent.includes('Aucun')) continue;
-                    
                     tr[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? "" : "none";
                 }
             }
@@ -157,26 +200,27 @@
             <div style="background: linear-gradient(135deg, #4285F4, #9b72cb); padding: 16px; color: white; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-magic"></i>
-                    <span style="font-weight: 500;">Assistant IA (Gemini)</span>
+                    <span style="font-weight: 500;" th:text="#{chatbot.title}">Assistant IA (Gemini)</span>
                 </div>
                 <button id="chatbot-close-btn" style="background: transparent; border: none; color: white; cursor: pointer; font-size: 16px;"><i class="fas fa-times"></i></button>
             </div>
             
             <div id="chatbot-messages" style="flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
-                <div style="align-self: flex-start; background: var(--yt-bg); padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 0; font-size: 14px; border: 1px solid var(--yt-border); max-width: 85%;">
+                <div style="align-self: flex-start; background: var(--yt-bg); padding: 10px 14px; border-radius: 12px; border-bottom-left-radius: 0; font-size: 14px; border: 1px solid var(--yt-border); max-width: 85%;"
+                     th:text="#{chatbot.welcome}">
                     Bonjour ! Je suis l'assistant IA de votre pressing. Comment puis-je vous aider aujourd'hui ?
                 </div>
             </div>
             
             <div style="padding: 12px; border-top: 1px solid var(--yt-border); background: var(--yt-bg); display: flex; gap: 8px;">
-                <input type="text" id="chatbot-input" placeholder="Posez votre question..." style="flex: 1; background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); border-radius: 20px; padding: 8px 16px; outline: none; font-size: 14px;">
+                <input type="text" id="chatbot-input" th:placeholder="#{chatbot.placeholder}" placeholder="Posez votre question..." style="flex: 1; background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); border-radius: 20px; padding: 8px 16px; outline: none; font-size: 14px;">
                 <button id="chatbot-send-btn" style="background: #4285F4; color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                     <i class="fas fa-paper-plane" style="font-size: 12px;"></i>
                 </button>
             </div>
         </div>
 
-        <script>
+        <script th:inline="javascript">
             document.addEventListener('DOMContentLoaded', function () {
                 const toggleBtn = document.getElementById('chatbot-toggle-btn');
                 const closeBtn = document.getElementById('chatbot-close-btn');
@@ -184,6 +228,9 @@
                 const sendBtn = document.getElementById('chatbot-send-btn');
                 const chatInput = document.getElementById('chatbot-input');
                 const messagesContainer = document.getElementById('chatbot-messages');
+
+                const msgError = /*[[#{chatbot.error}]]*/ 'Erreur de connexion au serveur.';
+                const msgNoResponse = /*[[#{chatbot.noResponse}]]*/ "Je n'ai pas pu générer de réponse.";
 
                 // Toggle logic
                 toggleBtn.addEventListener('click', () => {
@@ -229,10 +276,10 @@
                         } else if (data.candidates && data.candidates.length > 0) {
                             addMessage(data.candidates[0].content.parts[0].text, false);
                         } else {
-                            addMessage("Je n'ai pas pu générer de réponse.", false);
+                            addMessage(msgNoResponse, false);
                         }
                     } catch(e) {
-                        addMessage("Erreur de connexion au serveur.", false);
+                        addMessage(msgError, false);
                     }
                 }
 

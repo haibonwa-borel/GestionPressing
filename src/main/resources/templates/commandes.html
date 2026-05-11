@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout :: head('Commandes')}"></head>
+<head th:replace="~{layout :: head(#{orders.title})}"></head>
 <body>
 <th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
@@ -11,16 +11,16 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div>
-                    <h1 style="font-size: 24px; margin-bottom: 8px;">Gestion des Commandes</h1>
-                    <p style="color: var(--yt-text-secondary);">Gérez le flux de vos commandes de bout en bout.</p>
+                    <h1 style="font-size: 24px; margin-bottom: 8px;" th:text="#{orders.title}">Gestion des Commandes</h1>
+                    <p style="color: var(--yt-text-secondary);" th:text="#{orders.subtitle}">Gérez le flux de vos commandes de bout en bout.</p>
                 </div>
                 <div style="display: flex; gap: 16px; align-items: center;">
                     <div style="position: relative;">
                         <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--yt-text-secondary);"></i>
-                        <input type="text" id="search-commandes" placeholder="Rechercher une commande..." onkeyup="filterTable('search-commandes', 'table-commandes')" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 250px;">
+                        <input type="text" id="search-commandes" th:placeholder="#{orders.search}" placeholder="Rechercher une commande..." onkeyup="filterTable('search-commandes', 'table-commandes')" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 250px;">
                     </div>
                     <button class="yt-btn action" onclick="openModal('modal-add-commande')">
-                        <i class="fas fa-plus"></i> Nouvelle commande
+                        <i class="fas fa-plus"></i> <span th:text="#{orders.new}">Nouvelle commande</span>
                     </button>
                 </div>
             </div>
@@ -30,21 +30,21 @@
                 <table class="yt-table" id="table-commandes">
                     <thead>
                         <tr>
-                            <th>#ID</th>
-                            <th>Client</th>
-                            <th>Type</th>
-                            <th>Statut</th>
-                            <th>Prix</th>
-                            <th>Dépôt</th>
-                            <th>Retrait prévu</th>
-                            <th>Actions</th>
+                            <th th:text="#{orders.col.id}">#ID</th>
+                            <th th:text="#{orders.col.client}">Client</th>
+                            <th th:text="#{orders.col.type}">Type</th>
+                            <th th:text="#{orders.col.status}">Statut</th>
+                            <th th:text="#{orders.col.price}">Prix</th>
+                            <th th:text="#{orders.col.deposit}">Dépôt</th>
+                            <th th:text="#{orders.col.pickup}">Retrait prévu</th>
+                            <th th:text="#{orders.col.actions}">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(commandes)}">
                             <td colspan="8" style="text-align:center; color: var(--yt-text-secondary); padding: 40px;">
                                 <i class="fas fa-shopping-bag" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                                Aucune commande
+                                <span th:text="#{orders.empty}">Aucune commande</span>
                             </td>
                         </tr>
                         <tr th:each="c : ${commandes}">
@@ -65,17 +65,17 @@
                             </td>
                             <td>
                                 <span th:switch="${c.type.name()}">
-                                    <span th:case="'EXPRESS'" style="color: var(--yt-red); font-weight: 500;"><i class="fas fa-bolt"></i> Express</span>
-                                    <span th:case="'RAPIDE'" style="color: orange; font-weight: 500;"><i class="fas fa-rocket"></i> Rapide</span>
-                                    <span th:case="*" style="color: var(--yt-text-secondary);"><i class="fas fa-box"></i> Normal</span>
+                                    <span th:case="'EXPRESS'" style="color: var(--yt-red); font-weight: 500;"><i class="fas fa-bolt"></i> <span th:text="#{orders.type.express}">Express</span></span>
+                                    <span th:case="'RAPIDE'" style="color: orange; font-weight: 500;"><i class="fas fa-rocket"></i> <span th:text="#{orders.type.fast}">Rapide</span></span>
+                                    <span th:case="*" style="color: var(--yt-text-secondary);"><i class="fas fa-box"></i> <span th:text="#{orders.type.normal}">Normal</span></span>
                                 </span>
                             </td>
                             <td>
                                 <span th:switch="${c.statut.name()}"
                                       style="padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 500;">
-                                    <span th:case="'EN_ATTENTE'" class="badge pending"><i class="fas fa-clock"></i> En attente</span>
-                                    <span th:case="'EN_COURS'" class="badge processing"><i class="fas fa-sync-alt"></i> En cours</span>
-                                    <span th:case="'TERMINEE'" class="badge done"><i class="fas fa-check-circle"></i> Terminée</span>
+                                    <span th:case="'EN_ATTENTE'" class="badge pending"><i class="fas fa-clock"></i> <span th:text="#{orders.status.pending}">En attente</span></span>
+                                    <span th:case="'EN_COURS'" class="badge processing"><i class="fas fa-sync-alt"></i> <span th:text="#{orders.status.inProgress}">En cours</span></span>
+                                    <span th:case="'TERMINEE'" class="badge done"><i class="fas fa-check-circle"></i> <span th:text="#{orders.status.done}">Terminée</span></span>
                                     <span th:case="*" style="background: var(--yt-surface-hover); padding: 4px 10px; border-radius: 4px;" th:text="${c.statut}">-</span>
                                 </span>
                             </td>
@@ -100,10 +100,11 @@
                                             th:onclick="'envoyerFacture(' + ${c.id} + ')'" title="Envoyer facture">
                                         <i class="fas fa-envelope"></i>
                                     </button>
-                                    <button class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);"
-                                            th:onclick="'supprimerCommande(' + ${c.id} + ')'" title="Supprimer">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <form th:action="@{/commandes/{id}/delete(id=${c.id})}" method="post" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{orders.confirmDelete} + '\')'">
+                                        <button type="submit" class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);" title="Supprimer">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -119,18 +120,18 @@
 <div id="modal-vetements-commande" class="modal-overlay" style="z-index: 2500;">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-tshirt" style="color: var(--yt-accent); margin-right: 8px;"></i>Vêtements de la commande <span id="span-cmd-id"></span></h2>
+            <h2><i class="fas fa-tshirt" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{cloth.details.title}">Vêtements de la commande</span> <span id="span-cmd-id"></span></h2>
             <button class="close-btn" onclick="closeModal('modal-vetements-commande')">×</button>
         </div>
         <div id="loader-vetements" style="text-align: center; padding: 20px; color: var(--yt-text-secondary); display: none;">
             <i class="fas fa-spinner fa-spin" style="font-size: 24px;"></i>
-            <p style="margin-top: 8px;">Chargement...</p>
+            <p style="margin-top: 8px;" th:text="#{cloth.details.loading}">Chargement...</p>
         </div>
         <div id="liste-vetements-container" style="max-height: 400px; overflow-y: auto;">
             <!-- Rempli dynamiquement en JS -->
         </div>
         <div style="margin-top: 24px; text-align: right;">
-            <button type="button" class="yt-btn" onclick="closeModal('modal-vetements-commande')">Fermer</button>
+            <button type="button" class="yt-btn" onclick="closeModal('modal-vetements-commande')" th:text="#{cloth.details.close}">Fermer</button>
         </div>
     </div>
 </div>
@@ -139,19 +140,19 @@
 <div id="modal-add-commande" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-shopping-bag" style="color: var(--yt-accent); margin-right: 8px;"></i>Nouvelle commande</h2>
+            <h2><i class="fas fa-shopping-bag" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{order.form.new}">Nouvelle commande</span></h2>
             <button class="close-btn" onclick="closeModal('modal-add-commande')">×</button>
         </div>
-        <form id="form-add-commande" onsubmit="submitCommande(event)">
+        <form id="form-add-commande" th:action="@{/commandes/add}" method="post">
             <div class="form-group">
-                <label>Client *</label>
+                <label th:text="#{order.form.client} + ' *'">Client *</label>
                 <select class="form-control" name="utilisateurId" required>
-                    <option value="" disabled selected>-- Sélectionner un client --</option>
+                    <option value="" disabled selected th:text="#{order.form.selectClient}">-- Sélectionner un client --</option>
                     <option th:each="u : ${utilisateurs}" th:value="${u.id}" th:text="${u.prenom + ' ' + u.nom}"></option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Type de commande *</label>
+                <label th:text="#{order.form.type} + ' *'">Type de commande *</label>
                 <select class="form-control" name="type" required>
                     <option value="NORMAL">Normal</option>
                     <option value="RAPIDE">Rapide</option>
@@ -160,10 +161,10 @@
             </div>
             <div class="form-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <label style="margin: 0;">Vêtements (Ctrl+Clic pour plusieurs)</label>
+                    <label style="margin: 0;" th:text="#{order.form.clothes}">Vêtements (Ctrl+Clic pour plusieurs)</label>
                     <button type="button" class="yt-btn" style="padding: 4px 8px; font-size: 12px; background: transparent; border: 1px solid var(--yt-accent); color: var(--yt-accent);"
                             onclick="openModal('modal-inline-vetement')">
-                        <i class="fas fa-plus"></i> Nouveau
+                        <i class="fas fa-plus"></i> <span th:text="#{order.form.newCloth}">Nouveau</span>
                     </button>
                 </div>
                 <div id="checkbox-vetements" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--yt-border); border-radius: 8px; padding: 8px; background: var(--yt-surface-hover);">
@@ -174,9 +175,9 @@
                 </div>
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="yt-btn" onclick="closeModal('modal-add-commande')">Annuler</button>
+                <button type="button" class="yt-btn" onclick="closeModal('modal-add-commande')" th:text="#{order.form.cancel}">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-commande">
-                    <i class="fas fa-save"></i> Enregistrer la commande
+                    <i class="fas fa-save"></i> <span th:text="#{order.form.save}">Enregistrer la commande</span>
                 </button>
             </div>
         </form>
@@ -187,23 +188,23 @@
 <div id="modal-edit-commande" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i>Modifier la commande</h2>
+            <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{order.form.edit}">Modifier la commande</span></h2>
             <button class="close-btn" onclick="closeModal('modal-edit-commande')">×</button>
         </div>
-        <form id="form-edit-commande" onsubmit="submitEditCommande(event)">
+        <form id="form-edit-commande" th:action="@{/commandes/edit}" method="post">
             <input type="hidden" id="edit-cmd-id" name="id">
             <input type="hidden" id="edit-cmd-utilisateurId" name="utilisateurId">
             <div class="form-group">
-                <label>Statut de la commande *</label>
+                <label th:text="#{order.form.status} + ' *'">Statut de la commande *</label>
                 <select class="form-control" id="edit-cmd-statut" name="statut" required>
-                    <option value="EN_ATTENTE">En attente</option>
-                    <option value="EN_COURS">En cours</option>
-                    <option value="TERMINEE">Terminée</option>
-                    <option value="LIVREE">Livrée</option>
+                    <option value="EN_ATTENTE" th:text="#{orders.status.pending}">En attente</option>
+                    <option value="EN_COURS" th:text="#{orders.status.inProgress}">En cours</option>
+                    <option value="TERMINEE" th:text="#{orders.status.done}">Terminée</option>
+                    <option value="LIVREE" th:text="#{orders.status.delivered}">Livrée</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Type de commande *</label>
+                <label th:text="#{order.form.type} + ' *'">Type de commande *</label>
                 <select class="form-control" id="edit-cmd-type" name="type" required>
                     <option value="NORMAL">Normal</option>
                     <option value="RAPIDE">Rapide</option>
@@ -211,9 +212,9 @@
                 </select>
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="yt-btn" onclick="closeModal('modal-edit-commande')">Annuler</button>
+                <button type="button" class="yt-btn" onclick="closeModal('modal-edit-commande')" th:text="#{order.form.cancel}">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-edit-cmd">
-                    <i class="fas fa-save"></i> Mettre à jour
+                    <i class="fas fa-save"></i> <span th:text="#{order.form.update}">Mettre à jour</span>
                 </button>
             </div>
         </form>
@@ -224,16 +225,16 @@
 <div id="modal-inline-vetement" class="modal-overlay" style="z-index: 3000;">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-tshirt" style="color: var(--yt-accent); margin-right: 8px;"></i>Créer un vêtement</h2>
+            <h2><i class="fas fa-tshirt" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{cloth.form.create}">Créer un vêtement</span></h2>
             <button class="close-btn" onclick="closeModal('modal-inline-vetement')">×</button>
         </div>
         <form id="form-inline-vetement" onsubmit="submitInlineVetement(event)">
             <div class="form-group">
-                <label>Description *</label>
+                <label th:text="#{cloth.form.description} + ' *'">Description *</label>
                 <input class="form-control" type="text" name="description" required placeholder="Ex: Chemise">
             </div>
             <div class="form-group">
-                <label>Catégorie *</label>
+                <label th:text="#{cloth.form.category} + ' *'">Catégorie *</label>
                 <select class="form-control" name="categorie" required>
                     <option value="CHEMISE">Chemise</option>
                     <option value="PANTALON">Pantalon</option>
@@ -248,22 +249,22 @@
             </div>
             <div style="display: flex; gap: 12px;">
                 <div class="form-group" style="flex: 1;">
-                    <label>Couleur</label>
+                    <label th:text="#{cloth.form.color}">Couleur</label>
                     <input class="form-control" type="text" name="couleur" placeholder="Ex: Bleu ciel">
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label>Code Couleur (Hex)</label>
+                    <label th:text="#{cloth.form.colorCode}">Code Couleur (Hex)</label>
                     <input class="form-control" type="color" name="codeCouleur" style="height: 40px; padding: 4px;">
                 </div>
             </div>
             <div class="form-group">
-                <label>Photo</label>
-                <input class="form-control" type="file" name="file" accept="image/*">
+                <label th:text="#{cloth.form.photo}">Photo</label>
+                <input class="form-control" type="file" name="photo" accept="image/*">
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="yt-btn" onclick="closeModal('modal-inline-vetement')">Annuler</button>
+                <button type="button" class="yt-btn" onclick="closeModal('modal-inline-vetement')" th:text="#{cloth.form.cancel}">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-inline-vetement">
-                    <i class="fas fa-plus"></i> Ajouter au panier
+                    <i class="fas fa-plus"></i> <span th:text="#{cloth.form.addToCart}">Ajouter au panier</span>
                 </button>
             </div>
         </form>
@@ -353,66 +354,7 @@ function openEditCommandeModal(id, type, statut, utilisateurId) {
     openModal('modal-edit-commande');
 }
 
-function submitEditCommande(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit-edit-cmd');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    
-    // Commandes API doesn't allow user/vetements change on PUT easily without specific handling, 
-    // but the API expects utilisateurId. We might need to send the old one if the backend requires it.
-    // The current CommandeController consumes APPLICATION_FORM_URLENCODED_VALUE.
-    const data = new URLSearchParams(formData); 
-    const id = document.getElementById('edit-cmd-id').value;
-    
-    fetch('/api/commandes/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Erreur de modification");
-        window.location.reload();
-    })
-    .catch(err => {
-        alert("Erreur : (Vérifiez que tous les champs obligatoires comme Utilisateur sont gérés par le backend)");
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
-    });
-}
 
-function submitCommande(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit-commande');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = new URLSearchParams();
-    
-    // Manual handling of multiple checkboxes for URLSearchParams
-    formData.forEach((value, key) => {
-        data.append(key, value);
-    });    
-    fetch('/api/commandes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data
-    })
-        .then(res => {
-            if (!res.ok) throw new Error("Erreur serveur");
-            window.location.reload();
-        })
-        .catch(err => {
-            showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err.message);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer la commande';
-        });
-}
 
 function submitInlineVetement(e) {
     e.preventDefault();
@@ -422,12 +364,6 @@ function submitInlineVetement(e) {
     
     const form = e.target;
     const formData = new FormData(form);
-    
-    // Le backend attend "photo" au lieu de "file"
-    if(formData.has('file') && formData.get('file').size > 0) {
-        formData.append('photo', formData.get('file'));
-    }
-    formData.delete('file');
     
     fetch('/api/vetements', {
         method: 'POST',
@@ -462,14 +398,7 @@ function submitInlineVetement(e) {
         btn.innerHTML = '<i class="fas fa-plus"></i> Ajouter au panier';
     });
 }
-function supprimerCommande(id) {
-    if (!confirm("Voulez-vous vraiment supprimer cette commande ?")) return;
-    fetch('/api/commandes/' + id, { method: 'DELETE' })
-        .then(res => {
-            if (res.ok) window.location.reload();
-            else alert("Erreur lors de la suppression");
-        });
-}
+
 </script>
 <div th:replace="~{layout :: chatbot}"></div>
 </body>

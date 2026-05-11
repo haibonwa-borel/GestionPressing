@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout :: head('Clients')}"></head>
+<head th:replace="~{layout :: head(#{clients.title})}"></head>
 <body>
 <th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
@@ -11,16 +11,16 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div>
-                    <h1 style="font-size: 24px; margin-bottom: 8px;">Gestion des Clients</h1>
-                    <p style="color: var(--yt-text-secondary);">Ajoutez, modifiez ou consultez la liste de vos clients.</p>
+                    <h1 style="font-size: 24px; margin-bottom: 8px;" th:text="#{clients.title}">Gestion des Clients</h1>
+                    <p style="color: var(--yt-text-secondary);" th:text="#{clients.subtitle}">Ajoutez, modifiez ou consultez la liste de vos clients.</p>
                 </div>
                 <div style="display: flex; gap: 16px; align-items: center;">
                     <div style="position: relative;">
                         <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--yt-text-secondary);"></i>
-                        <input type="text" id="search-input" placeholder="Rechercher un client..." onkeyup="filterTable('search-input', 'table-utilisateurs')" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 250px;">
+                        <input type="text" id="search-input" th:placeholder="#{clients.search}" placeholder="Rechercher un client..." onkeyup="filterTable('search-input', 'table-utilisateurs')" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 250px;">
                     </div>
                     <button class="yt-btn action" onclick="openModal('modal')">
-                        <i class="fas fa-plus"></i> Nouveau Client
+                        <i class="fas fa-plus"></i> <span th:text="#{clients.new}">Nouveau Client</span>
                     </button>
                 </div>
             </div>
@@ -30,17 +30,17 @@
                 <table class="yt-table" id="table-utilisateurs">
                     <thead>
                         <tr>
-                            <th>Client</th>
-                            <th>Email</th>
-                            <th>Téléphone</th>
-                            <th>ID</th>
+                            <th th:text="#{clients.col.client}">Client</th>
+                            <th th:text="#{clients.col.email}">Email</th>
+                            <th th:text="#{clients.col.phone}">Téléphone</th>
+                            <th th:text="#{clients.col.id}">ID</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(utilisateurs)}">
                             <td colspan="4" style="text-align:center; color: var(--yt-text-secondary); padding: 40px;">
                                 <i class="fas fa-users" style="font-size: 32px; margin-bottom: 12px; display: block;"></i>
-                                Aucun client enregistré
+                                <span th:text="#{clients.empty}">Aucun client enregistré</span>
                             </td>
                         </tr>
                         <tr th:each="u : ${utilisateurs}">
@@ -65,12 +65,13 @@
                             <td>
                                 <button class="yt-btn" style="padding: 6px 10px; font-size: 12px;"
                                         th:onclick="openEditModal([[${u.id}]], [[${u.nom}]], [[${u.prenom}]], [[${u.email}]], [[${u.telephone}]])">
-                                    <i class="fas fa-pen"></i> Éditer
+                                    <i class="fas fa-pen"></i> <span th:text="#{clients.edit}">Éditer</span>
                                 </button>
-                                <button class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);"
-                                        th:onclick="'supprimerUtilisateur(' + ${u.id} + ')'">
-                                    <i class="fas fa-trash"></i> Supprimer
-                                </button>
+                                <form th:action="@{/utilisateurs/{id}/delete(id=${u.id})}" method="post" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{clients.confirmDelete} + '\')'">
+                                    <button type="submit" class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);">
+                                        <i class="fas fa-trash"></i> <span th:text="#{clients.delete}">Supprimer</span>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     </tbody>
@@ -85,34 +86,34 @@
 <div id="modal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-user-plus" style="color: var(--yt-accent); margin-right: 8px;"></i>Nouveau client</h2>
+            <h2><i class="fas fa-user-plus" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{client.form.new}">Nouveau client</span></h2>
             <button class="close-btn" onclick="closeModal('modal')">×</button>
         </div>
-        <form id="form-add-client" onsubmit="submitClient(event)">
+        <form id="form-add-client" th:action="@{/utilisateurs/add}" method="post">
             <div class="form-group">
-                <label>Prénom *</label>
+                <label th:text="#{client.form.firstName} + ' *'">Prénom *</label>
                 <input class="form-control" type="text" name="prenom" required placeholder="Jean">
             </div>
             <div class="form-group">
-                <label>Nom *</label>
+                <label th:text="#{client.form.lastName} + ' *'">Nom *</label>
                 <input class="form-control" type="text" name="nom" required placeholder="Dupont">
             </div>
             <div class="form-group">
-                <label>Email *</label>
+                <label th:text="#{client.form.email} + ' *'">Email *</label>
                 <input class="form-control" type="email" name="email" required placeholder="jean.dupont@email.com">
             </div>
             <div class="form-group">
-                <label>Mot de passe *</label>
+                <label th:text="#{client.form.password} + ' *'">Mot de passe *</label>
                 <input class="form-control" type="password" name="motDePasse" required placeholder="••••••••">
             </div>
             <div class="form-group">
-                <label>Téléphone</label>
+                <label th:text="#{client.form.phone}">Téléphone</label>
                 <input class="form-control" type="tel" name="telephone" placeholder="+237 6xx xxx xxx">
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="yt-btn" onclick="closeModal('modal')">Annuler</button>
+                <button type="button" class="yt-btn" onclick="closeModal('modal')" th:text="#{client.form.cancel}">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;">
-                    <i class="fas fa-save"></i> Enregistrer
+                    <i class="fas fa-save"></i> <span th:text="#{client.form.save}">Enregistrer</span>
                 </button>
             </div>
         </form>
@@ -123,31 +124,31 @@
 <div id="modal-edit" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i>Modifier le client</h2>
+            <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{client.form.edit}">Modifier le client</span></h2>
             <button class="close-btn" onclick="closeModal('modal-edit')">×</button>
         </div>
-        <form id="form-edit-client" onsubmit="submitEditClient(event)">
+        <form id="form-edit-client" th:action="@{/utilisateurs/edit}" method="post">
             <input type="hidden" id="edit-id" name="id">
             <div class="form-group">
-                <label>Prénom *</label>
+                <label th:text="#{client.form.firstName} + ' *'">Prénom *</label>
                 <input class="form-control" type="text" id="edit-prenom" name="prenom" required>
             </div>
             <div class="form-group">
-                <label>Nom *</label>
+                <label th:text="#{client.form.lastName} + ' *'">Nom *</label>
                 <input class="form-control" type="text" id="edit-nom" name="nom" required>
             </div>
             <div class="form-group">
-                <label>Email *</label>
+                <label th:text="#{client.form.email} + ' *'">Email *</label>
                 <input class="form-control" type="email" id="edit-email" name="email" required>
             </div>
             <div class="form-group">
-                <label>Téléphone</label>
+                <label th:text="#{client.form.phone}">Téléphone</label>
                 <input class="form-control" type="tel" id="edit-telephone" name="telephone">
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="yt-btn" onclick="closeModal('modal-edit')">Annuler</button>
+                <button type="button" class="yt-btn" onclick="closeModal('modal-edit')" th:text="#{client.form.cancel}">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-edit">
-                    <i class="fas fa-save"></i> Mettre à jour
+                    <i class="fas fa-save"></i> <span th:text="#{client.form.update}">Mettre à jour</span>
                 </button>
             </div>
         </form>
@@ -170,62 +171,6 @@ function openEditModal(id, nom, prenom, email, telephone) {
     openModal('modal-edit');
 }
 
-function submitClient(e) {
-    e.preventDefault();
-    const btn = e.target.querySelector('button[type="submit"]');
-    const originalContent = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = new URLSearchParams(formData);
-
-    fetch('/api/utilisateurs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data
-    })
-    .then(async res => {
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.message || errData.error || "Erreur de création");
-        }
-        window.location.reload();
-    })
-    .catch(err => {
-        alert("Erreur : " + err.message);
-        btn.disabled = false;
-        btn.innerHTML = originalContent;
-    });
-}
-
-function submitEditClient(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit-edit');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = new URLSearchParams(formData); // application/x-www-form-urlencoded
-    const id = document.getElementById('edit-id').value;
-    
-    fetch('/api/utilisateurs/' + id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Erreur de modification");
-        window.location.reload();
-    })
-    .catch(err => {
-        alert("Erreur : " + err.message);
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
-    });
-}
 </script>
 <div th:replace="layout :: chatbot"></div>
 </body>

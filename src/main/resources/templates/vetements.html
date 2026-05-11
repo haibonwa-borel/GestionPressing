@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{layout :: head('Vêtements')}"></head>
+<head th:replace="~{layout :: head(#{clothes.title})}"></head>
 <body>
 <th:block th:replace="~{layout :: themeScript}"></th:block>
 <div class="app-container">
@@ -11,17 +11,17 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div>
-                    <h1 style="font-size: 24px; margin-bottom: 8px;">Gestion des Vêtements</h1>
-                    <p style="color: var(--yt-text-secondary);">Inventaire de tous les vêtements enregistrés.</p>
+                    <h1 style="font-size: 24px; margin-bottom: 8px;" th:text="#{clothes.title}">Gestion des Vêtements</h1>
+                    <p style="color: var(--yt-text-secondary);" th:text="#{clothes.subtitle}">Inventaire de tous les vêtements enregistrés.</p>
                 </div>
                 <div style="display: flex; gap: 12px; align-items: center;">
                     <div style="position: relative; margin-right: 8px;">
                         <i class="fas fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--yt-text-secondary);"></i>
-                        <input type="text" id="search-vetements" placeholder="Recherche texte..." onkeyup="filterVetements()" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 160px;">
+                        <input type="text" id="search-vetements" th:placeholder="#{clothes.search}" placeholder="Recherche texte..." onkeyup="filterVetements()" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px 12px 8px 36px; border-radius: 18px; outline: none; width: 160px;">
                     </div>
                     
                     <select id="filter-cat" onchange="filterVetements()" style="background: var(--yt-surface); border: 1px solid var(--yt-border); color: var(--yt-text-primary); padding: 8px; border-radius: 18px; outline: none; margin-right: 8px;">
-                        <option value="">Toutes catégories</option>
+                        <option value="" th:text="#{clothes.allCategories}">Toutes catégories</option>
                         <option value="CHEMISE">Chemise</option>
                         <option value="PANTALON">Pantalon</option>
                         <option value="ROBE">Robe</option>
@@ -35,7 +35,7 @@
                         <option value="AUTRE">Autre</option>
                     </select>
                     <button class="yt-btn action" onclick="openModal('modal-add')">
-                        <i class="fas fa-plus"></i> Nouveau Vêtement
+                        <i class="fas fa-plus"></i> <span th:text="#{clothes.new}">Nouveau Vêtement</span>
                     </button>
                     <!-- Toggle View -->
                     <div style="display: flex; background: var(--yt-surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--yt-border);">
@@ -56,7 +56,7 @@
                 <div th:if="${#lists.isEmpty(vetements)}"
                      style="grid-column: 1/-1; text-align: center; color: var(--yt-text-secondary); padding: 60px;">
                     <i class="fas fa-tshirt" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
-                    Aucun vêtement enregistré
+                    <span th:text="#{clothes.empty}">Aucun vêtement enregistré</span>
                 </div>
                 <div th:each="v : ${vetements}" class="card">
                     <!-- Thumbnail -->
@@ -80,10 +80,11 @@
                                     th:onclick="openEditVetementModal([[${v.id}]], [[${v.description}]], [[${v.categorie}]], [[${v.couleur}]], [[${v.codeCouleur}]])">
                                 <i class="fas fa-pen"></i>
                             </button>
-                            <button class="yt-btn" style="padding: 6px; font-size: 12px; border-radius: 50%; background: rgba(255,0,0,0.6); color: white; border: none;"
-                                    th:onclick="'supprimerVetement(' + ${v.id} + ')'">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <form th:action="@{/vetements/{id}/delete(id=${v.id})}" method="post" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{clothes.confirmDelete} + '\')'">
+                                <button type="submit" class="yt-btn" style="padding: 6px; font-size: 12px; border-radius: 50%; background: rgba(255,0,0,0.6); color: white; border: none;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
                         </div>
 
                         <!-- Category badge -->
@@ -115,10 +116,10 @@
                 <table class="yt-table" id="table-vetements">
                     <thead>
                         <tr>
-                            <th>SKU</th>
-                            <th>Description</th>
-                            <th>Catégorie</th>
-                            <th>Couleur</th>
+                            <th th:text="#{clothes.col.sku}">SKU</th>
+                            <th th:text="#{clothes.col.description}">Description</th>
+                            <th th:text="#{clothes.col.category}">Catégorie</th>
+                            <th th:text="#{clothes.col.color}">Couleur</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,10 +141,11 @@
                                         th:onclick="openEditVetementModal([[${v.id}]], [[${v.description}]], [[${v.categorie}]], [[${v.couleur}]], [[${v.codeCouleur}]])">
                                     <i class="fas fa-pen"></i>
                                 </button>
-                                <button class="yt-btn" style="padding: 4px 8px; font-size: 12px; color: var(--yt-red);"
-                                        th:onclick="'supprimerVetement(' + ${v.id} + ')'">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <form th:action="@{/vetements/{id}/delete(id=${v.id})}" method="post" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{clothes.confirmDelete} + '\')'">
+                                    <button type="submit" class="yt-btn" style="padding: 4px 8px; font-size: 12px; color: var(--yt-red);">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     </tbody>
@@ -158,16 +160,16 @@
 <div id="modal-add" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-plus" style="color: var(--yt-accent); margin-right: 8px;"></i>Nouveau vêtement</h2>
+            <h2><i class="fas fa-plus" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{cloth.form.new}">Nouveau vêtement</span></h2>
             <button class="close-btn" onclick="closeModal('modal-add')">×</button>
         </div>
-        <form id="form-add-vetement" onsubmit="submitVetement(event)">
+        <form id="form-add-vetement" th:action="@{/vetements/add}" method="post" enctype="multipart/form-data">
             <div class="form-group">
-                <label>Description *</label>
+                <label th:text="#{cloth.form.description} + ' *'">Description *</label>
                 <input class="form-control" type="text" name="description" required placeholder="Ex: Chemise bleue">
             </div>
             <div class="form-group">
-                <label>Catégorie *</label>
+                <label th:text="#{cloth.form.category} + ' *'">Catégorie *</label>
                 <select class="form-control" name="categorie" required>
                     <option value="CHEMISE">Chemise</option>
                     <option value="PANTALON">Pantalon</option>
@@ -184,22 +186,22 @@
             </div>
             <div style="display: flex; gap: 12px;">
                 <div class="form-group" style="flex: 1;">
-                    <label>Couleur</label>
+                    <label th:text="#{cloth.form.color}">Couleur</label>
                     <input class="form-control" type="text" name="couleur" placeholder="Ex: Bleu ciel">
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label>Code Couleur (Hex)</label>
+                    <label th:text="#{cloth.form.colorCode}">Code Couleur (Hex)</label>
                     <input class="form-control" type="color" name="codeCouleur" style="height: 40px; padding: 4px;">
                 </div>
             </div>
             <div class="form-group">
-                <label>Photo</label>
-                <input class="form-control" type="file" name="file" accept="image/*">
+                <label th:text="#{cloth.form.photo}">Photo</label>
+                <input class="form-control" type="file" name="photo" accept="image/*">
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="yt-btn" onclick="closeModal('modal-add')">Annuler</button>
+                <button type="button" class="yt-btn" onclick="closeModal('modal-add')" th:text="#{cloth.form.cancel}">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-vetement">
-                    <i class="fas fa-save"></i> Enregistrer
+                    <i class="fas fa-save"></i> <span th:text="#{cloth.form.save}">Enregistrer</span>
                 </button>
             </div>
         </form>
@@ -210,17 +212,17 @@
 <div id="modal-edit-vetement" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i>Modifier le vêtement</h2>
+            <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{cloth.form.edit}">Modifier le vêtement</span></h2>
             <button class="close-btn" onclick="closeModal('modal-edit-vetement')">×</button>
         </div>
-        <form id="form-edit-vetement" onsubmit="submitEditVetement(event)">
+        <form id="form-edit-vetement" th:action="@{/vetements/edit}" method="post" enctype="multipart/form-data">
             <input type="hidden" id="edit-vet-id" name="id">
             <div class="form-group">
-                <label>Description *</label>
+                <label th:text="#{cloth.form.description} + ' *'">Description *</label>
                 <input class="form-control" type="text" id="edit-vet-desc" name="description" required>
             </div>
             <div class="form-group">
-                <label>Catégorie *</label>
+                <label th:text="#{cloth.form.category} + ' *'">Catégorie *</label>
                 <select class="form-control" id="edit-vet-cat" name="categorie" required>
                     <option value="CHEMISE">Chemise</option>
                     <option value="PANTALON">Pantalon</option>
@@ -237,22 +239,22 @@
             </div>
             <div style="display: flex; gap: 12px;">
                 <div class="form-group" style="flex: 1;">
-                    <label>Couleur</label>
+                    <label th:text="#{cloth.form.color}">Couleur</label>
                     <input class="form-control" type="text" id="edit-vet-couleur" name="couleur">
                 </div>
                 <div class="form-group" style="flex: 1;">
-                    <label>Code Couleur (Hex)</label>
+                    <label th:text="#{cloth.form.colorCode}">Code Couleur (Hex)</label>
                     <input class="form-control" type="color" id="edit-vet-codeCouleur" name="codeCouleur" style="height: 40px; padding: 4px;">
                 </div>
             </div>
             <div class="form-group">
-                <label>Nouvelle Photo (laisser vide pour conserver)</label>
+                <label th:text="#{cloth.form.newPhoto}">Nouvelle Photo (laisser vide pour conserver)</label>
                 <input class="form-control" type="file" name="photo" accept="image/*">
             </div>
             <div style="display: flex; gap: 12px; margin-top: 24px;">
-                <button type="button" class="yt-btn" onclick="closeModal('modal-edit-vetement')">Annuler</button>
+                <button type="button" class="yt-btn" onclick="closeModal('modal-edit-vetement')" th:text="#{cloth.form.cancel}">Annuler</button>
                 <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-edit-vetement">
-                    <i class="fas fa-save"></i> Mettre à jour
+                    <i class="fas fa-save"></i> <span th:text="#{cloth.form.update}">Mettre à jour</span>
                 </button>
             </div>
         </form>
@@ -341,74 +343,7 @@ function openEditVetementModal(id, desc, cat, couleur, codeCouleur) {
     openModal('modal-edit-vetement');
 }
 
-function submitEditVetement(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit-edit-vetement');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
-    
-    const form = e.target;
-    const formData = new FormData(form);
-    const id = document.getElementById('edit-vet-id').value;
-    
-    fetch('/api/vetements/' + id, {
-        method: 'PUT',
-        body: formData
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Erreur de modification");
-        return res.json();
-    })
-    .then(data => {
-        window.location.reload();
-    })
-    .catch(err => {
-        alert("Erreur : " + err.message);
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
-    });
-}
 
-function submitVetement(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-submit-vetement');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
-    
-    const form = e.target;
-    // Use 'photo' field if the backend expects photo instead of 'file' based on VetementController.java
-    const formData = new FormData(form);
-    if(formData.has('file')) {
-        formData.append('photo', formData.get('file'));
-        formData.delete('file');
-    }
-    
-    fetch('/api/vetements', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Erreur de création");
-        return res.json();
-    })
-    .then(data => {
-        window.location.reload();
-    })
-    .catch(err => {
-        alert("Erreur : " + err.message);
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
-    });
-}
-
-function supprimerVetement(id) {
-    if (!confirm("Voulez-vous vraiment supprimer cet article ?")) return;
-    fetch('/api/vetements/' + id, { method: 'DELETE' })
-        .then(res => {
-            if (res.ok) window.location.reload();
-            else alert("Erreur lors de la suppression");
-        });
-}
 </script>
 <div th:replace="~{layout :: chatbot}"></div>
 </body>

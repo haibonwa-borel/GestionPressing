@@ -66,6 +66,18 @@
 			<version>1.0.10</version>
 		</dependency>
 
+		<!-- Bouncy Castle pour la signature numérique des PDF -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>1.78.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpkix-jdk18on</artifactId>
+			<version>1.78.1</version>
+		</dependency>
+
 		<!-- Validation (@NotBlank, @Size, @Min, @Email...) -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
