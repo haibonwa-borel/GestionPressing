@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title} + ' - Pressing App'">Pressing App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Apply theme BEFORE render to avoid flash -->
+    <script>
+        (function() {
+            const saved = localStorage.getItem('pressing-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
+    </script>
+</head>
+<body>
+
+    <!-- Header Fragment -->
+    <header th:fragment="header" class="app-header">
+        <div class="header-left">
+            <button class="menu-btn" id="sidebar-toggle-btn"><i class="fas fa-bars"></i></button>
+            <a href="/" class="logo">
+                <i class="fas fa-tshirt logo-icon"></i>
+                Pressing<span style="font-weight: 400; font-size: 18px; margin-left: 2px;">App</span>
+            </a>
+        </div>
+        <div class="header-right" style="display: flex; align-items: center; gap: 8px;">
+            <!-- Theme Toggle Button -->
+            <button class="menu-btn theme-toggle-btn" id="theme-toggle" title="Changer le thème"
+                    onclick="toggleTheme()">
+                <i class="fas fa-moon" id="theme-icon"></i>
+            </button>
+            <button class="menu-btn"><i class="fas fa-bell"></i></button>
+            <button class="menu-btn"><i class="fas fa-user-circle"></i></button>
+        </div>
+    </header>
+
+    <!-- Sidebar Fragment -->
+    <aside th:fragment="sidebar" class="sidebar" id="sidebar">
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="/" class="nav-link" th:classappend="${activeMenu == 'home'} ? 'active'">
+                    <i class="fas fa-home nav-icon"></i>
+                    <span>Accueil</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/utilisateurs" class="nav-link" th:classappend="${activeMenu == 'utilisateurs'} ? 'active'">
+                    <i class="fas fa-users nav-icon"></i>
+                    <span>Clients</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/commandes" class="nav-link" th:classappend="${activeMenu == 'commandes'} ? 'active'">
+                    <i class="fas fa-shopping-bag nav-icon"></i>
+                    <span>Commandes</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/vetements" class="nav-link" th:classappend="${activeMenu == 'vetements'} ? 'active'">
+                    <i class="fas fa-tags nav-icon"></i>
+                    <span>Vêtements</span>
+                </a>
+            </li>
+            <li style="margin: 12px 0; border-top: 1px solid var(--yt-border);"></li>
+            <li class="nav-item">
+                <a href="/swagger-ui.html" target="_blank" class="nav-link">
+                    <i class="fas fa-code nav-icon"></i>
+                    <span>API Docs</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Global Theme + Sidebar Script (included in every page) -->
+    <script th:fragment="themeScript">
+        // Theme
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('pressing-theme', next);
+            updateThemeIcon(next);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            if (!icon) return;
+            if (theme === 'light') {
+                icon.className = 'fas fa-sun';
+                icon.parentElement.style.color = '#f59e0b';
+            } else {
+                icon.className = 'fas fa-moon';
+                icon.parentElement.style.color = '';
+            }
+        }
+
+        // Init icon on load
+        document.addEventListener('DOMContentLoaded', function () {
+            const saved = localStorage.getItem('pressing-theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeIcon(saved);
+
+            // Sidebar collapse
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function () {
+                    sidebar.classList.toggle('collapsed');
+                    const content = document.querySelector('.content-area');
+                    if (content) content.classList.toggle('sidebar-collapsed');
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>

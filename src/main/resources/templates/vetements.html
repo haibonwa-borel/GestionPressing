@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="layout :: head('Vêtements')"></head>
+<body>
+<th:block th:replace="layout :: themeScript"></th:block>
+<div class="app-container">
+    <header th:replace="layout :: header"></header>
+    <div class="main-layout">
+        <aside th:replace="layout :: sidebar"></aside>
+        <main class="content-area">
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+                <div>
+                    <h1 style="font-size: 24px; margin-bottom: 4px;">Vêtements</h1>
+                    <p style="color: var(--yt-text-secondary); font-size: 14px;">
+                        <span th:text="${#lists.size(vetements)}">0</span> vêtement(s) enregistré(s)
+                    </p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <button class="yt-btn action" onclick="openModal('modal-add')">
+                        <i class="fas fa-plus"></i> Ajouter un vêtement
+                    </button>
+                    <!-- Toggle View -->
+                    <div style="display: flex; background: var(--yt-surface); border-radius: 8px; overflow: hidden; border: 1px solid var(--yt-border);">
+                        <button onclick="setView('grid')" id="btn-grid"
+                                style="padding: 8px 12px; background: var(--yt-accent); color: #000; border: none; cursor: pointer;">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button onclick="setView('list')" id="btn-list"
+                                style="padding: 8px 12px; background: transparent; color: var(--yt-text-primary); border: none; cursor: pointer;">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue Grille (YouTube style) -->
+            <div id="view-grid" class="grid-container">
+                <div th:if="${#lists.isEmpty(vetements)}"
+                     style="grid-column: 1/-1; text-align: center; color: var(--yt-text-secondary); padding: 60px;">
+                    <i class="fas fa-tshirt" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                    Aucun vêtement enregistré
+                </div>
+                <div th:each="v : ${vetements}" class="card">
+                    <!-- Thumbnail -->
+                    <div class="card-thumbnail"
+                         style="display: flex; align-items: center; justify-content: center; position: relative;">
+                        <img th:if="${v.photoUrl != null and !#strings.isEmpty(v.photoUrl)}"
+                             th:src="${v.photoUrl}"
+                             style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"
+                             alt="photo">
+                        <div th:unless="${v.photoUrl != null and !#strings.isEmpty(v.photoUrl)}"
+                             style="display: flex; align-items: center; justify-content: center;
+                                    width: 100%; height: 100%;
+                                    background: var(--yt-surface); border-radius: 12px;">
+                            <i class="fas fa-tshirt"
+                               style="font-size: 48px;"
+                               th:style="'font-size: 48px; color: ' + (${v.codeCouleur} ?: '#aaa')"></i>
+                        </div>
+                        
+                        <!-- Overlay actions -->
+                        <div style="position: absolute; top: 8px; right: 8px; display: flex; gap: 4px;">
+                            <button class="yt-btn" style="padding: 6px; font-size: 12px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: none;"
+                                    th:onclick="openEditVetementModal([[${v.id}]], [[${v.description}]], [[${v.categorie}]], [[${v.couleur}]], [[${v.codeCouleur}]])">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                        </div>
+
+                        <!-- Category badge -->
+                        <span style="position: absolute; bottom: 8px; right: 8px;
+                                     background: rgba(0,0,0,0.8); padding: 3px 8px;
+                                     border-radius: 4px; font-size: 12px;"
+                              th:text="${v.categorie}">CAT</span>
+                    </div>
+                    <!-- Card info -->
+                    <div class="card-info">
+                        <div class="card-avatar"
+                             th:style="'background: ' + (${v.codeCouleur} ?: 'var(--yt-surface-hover)')">
+                            <i class="fas fa-tag" style="font-size: 12px;"></i>
+                        </div>
+                        <div class="card-details">
+                            <div class="card-title" th:text="${v.description}">Description</div>
+                            <div class="card-subtitle">
+                                <span th:if="${v.couleur != null}" th:text="${v.couleur}">Couleur</span>
+                                <span style="margin: 0 4px; font-size: 10px;" th:if="${v.couleur != null and v.sku != null}">•</span>
+                                <span style="font-family: monospace; font-size: 12px;" th:if="${v.sku != null}" th:text="${v.sku}">SKU</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vue Liste -->
+            <div id="view-list" style="display: none;" class="yt-table-container">
+                <table class="yt-table">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Description</th>
+                            <th>Catégorie</th>
+                            <th>Couleur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="v : ${vetements}">
+                            <td style="font-family: monospace; font-size: 12px; color: var(--yt-accent);" th:text="${v.sku}">-</td>
+                            <td th:text="${v.description}">-</td>
+                            <td>
+                                <span style="background: var(--yt-surface-hover); padding: 4px 8px; border-radius: 4px; font-size: 12px;"
+                                      th:text="${v.categorie}">-</span>
+                            </td>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div th:if="${v.codeCouleur}"
+                                         th:style="'width: 16px; height: 16px; border-radius: 50%; background: ' + ${v.codeCouleur}"></div>
+                                    <span th:text="${v.couleur ?: '-'}">-</span>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="yt-btn" style="padding: 4px 8px; font-size: 12px;"
+                                        th:onclick="openEditVetementModal([[${v.id}]], [[${v.description}]], [[${v.categorie}]], [[${v.couleur}]], [[${v.codeCouleur}]])">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- Modal Ajout Vêtement -->
+<div id="modal-add" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-plus" style="color: var(--yt-accent); margin-right: 8px;"></i>Nouveau vêtement</h2>
+            <button class="close-btn" onclick="closeModal('modal-add')">×</button>
+        </div>
+        <form id="form-add-vetement" onsubmit="submitVetement(event)">
+            <div class="form-group">
+                <label>Description *</label>
+                <input class="form-control" type="text" name="description" required placeholder="Ex: Chemise bleue">
+            </div>
+            <div class="form-group">
+                <label>Catégorie *</label>
+                <select class="form-control" name="categorie" required>
+                    <option value="CHEMISE">Chemise</option>
+                    <option value="PANTALON">Pantalon</option>
+                    <option value="ROBE">Robe</option>
+                    <option value="VESTE">Veste</option>
+                    <option value="MANTEAU">Manteau</option>
+                    <option value="JUPE">Jupe</option>
+                    <option value="TSHIRT">T-Shirt</option>
+                    <option value="COSTUME">Costume</option>
+                    <option value="AUTRE">Autre</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Couleur</label>
+                    <input class="form-control" type="text" name="couleur" placeholder="Ex: Bleu ciel">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Code Couleur (Hex)</label>
+                    <input class="form-control" type="color" name="codeCouleur" style="height: 40px; padding: 4px;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Photo</label>
+                <input class="form-control" type="file" name="file" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="yt-btn" onclick="closeModal('modal-add')">Annuler</button>
+                <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-vetement">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Edit Vêtement -->
+<div id="modal-edit-vetement" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i>Modifier le vêtement</h2>
+            <button class="close-btn" onclick="closeModal('modal-edit-vetement')">×</button>
+        </div>
+        <form id="form-edit-vetement" onsubmit="submitEditVetement(event)">
+            <input type="hidden" id="edit-vet-id" name="id">
+            <div class="form-group">
+                <label>Description *</label>
+                <input class="form-control" type="text" id="edit-vet-desc" name="description" required>
+            </div>
+            <div class="form-group">
+                <label>Catégorie *</label>
+                <select class="form-control" id="edit-vet-cat" name="categorie" required>
+                    <option value="CHEMISE">Chemise</option>
+                    <option value="PANTALON">Pantalon</option>
+                    <option value="ROBE">Robe</option>
+                    <option value="VESTE">Veste</option>
+                    <option value="MANTEAU">Manteau</option>
+                    <option value="JUPE">Jupe</option>
+                    <option value="TSHIRT">T-Shirt</option>
+                    <option value="COSTUME">Costume</option>
+                    <option value="AUTRE">Autre</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Couleur</label>
+                    <input class="form-control" type="text" id="edit-vet-couleur" name="couleur">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Code Couleur (Hex)</label>
+                    <input class="form-control" type="color" id="edit-vet-codeCouleur" name="codeCouleur" style="height: 40px; padding: 4px;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Nouvelle Photo (laisser vide pour conserver)</label>
+                <input class="form-control" type="file" name="photo" accept="image/*">
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="button" class="yt-btn" onclick="closeModal('modal-edit-vetement')">Annuler</button>
+                <button type="submit" class="yt-btn action" style="flex: 1;" id="btn-submit-edit-vetement">
+                    <i class="fas fa-save"></i> Mettre à jour
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function setView(view) {
+    const grid = document.getElementById('view-grid');
+    const list = document.getElementById('view-list');
+    const btnGrid = document.getElementById('btn-grid');
+    const btnList = document.getElementById('btn-list');
+    if (view === 'grid') {
+        grid.style.display = 'grid';
+        list.style.display = 'none';
+        btnGrid.style.background = 'var(--yt-accent)';
+        btnGrid.style.color = '#000';
+        btnList.style.background = 'transparent';
+        btnList.style.color = 'var(--yt-text-primary)';
+    } else {
+        grid.style.display = 'none';
+        list.style.display = 'block';
+        btnList.style.background = 'var(--yt-accent)';
+        btnList.style.color = '#000';
+        btnGrid.style.background = 'transparent';
+        btnGrid.style.color = 'var(--yt-text-primary)';
+    }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+});
+
+function openEditVetementModal(id, desc, cat, couleur, codeCouleur) {
+    document.getElementById('edit-vet-id').value = id;
+    document.getElementById('edit-vet-desc').value = desc;
+    document.getElementById('edit-vet-cat').value = cat;
+    document.getElementById('edit-vet-couleur').value = couleur || '';
+    document.getElementById('edit-vet-codeCouleur').value = codeCouleur || '#ffffff';
+    openModal('modal-edit-vetement');
+}
+
+function submitEditVetement(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit-edit-vetement');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
+    
+    const form = e.target;
+    const formData = new FormData(form);
+    const id = document.getElementById('edit-vet-id').value;
+    
+    fetch('/api/vetements/' + id, {
+        method: 'PUT',
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Erreur de modification");
+        return res.json();
+    })
+    .then(data => {
+        window.location.reload();
+    })
+    .catch(err => {
+        alert("Erreur : " + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Mettre à jour';
+    });
+}
+
+function submitVetement(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit-vetement');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> En cours...';
+    
+    const form = e.target;
+    // Use 'photo' field if the backend expects photo instead of 'file' based on VetementController.java
+    const formData = new FormData(form);
+    if(formData.has('file')) {
+        formData.append('photo', formData.get('file'));
+        formData.delete('file');
+    }
+    
+    fetch('/api/vetements', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) throw new Error("Erreur de création");
+        return res.json();
+    })
+    .then(data => {
+        window.location.reload();
+    })
+    .catch(err => {
+        alert("Erreur : " + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Enregistrer';
+    });
+}
+</script>
+</body>
+</html>

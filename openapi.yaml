@@ -1,0 +1,458 @@
+openapi: 3.0.3
+info:
+  title: API Gestion de Pressing
+  description: |
+    API REST pour la gestion d'un pressing.
+    
+    ### Fonctionnalités
+    - Gestion des **utilisateurs** (CRUD + pagination + recherche)
+    - Gestion des **commandes** (CRUD + filtrage + suppression en cascade)
+    - Gestion des **vêtements** avec upload de photo (Many-to-Many avec Commandes)
+    - **Facturation & Emails** (Envoi automatique de facture + Rappels 24h)
+    - **SKU** unique auto-généré pour chaque vêtement
+    - **Persistance SQLite** via Spring Data JPA
+    
+    ### Formats de requête
+    - `Utilisateur` / `Commande` : `application/x-www-form-urlencoded`
+    - `Vetement` : `multipart/form-data` (pour l'upload de photo)
+  version: "2.0.0"
+  contact:
+    name: Pressing App TP
+
+servers:
+  - url: http://localhost:8080
+    description: Serveur local de développement
+
+tags:
+  - name: Utilisateurs
+    description: Gestion des clients du pressing
+  - name: Commandes
+    description: Gestion des commandes (avec suppression en cascade des liaisons)
+  - name: Vêtements
+    description: Gestion des vêtements (avec upload de photo)
+  - name: Notifications
+    description: Envoi manuel de factures et déclenchement des rappels
+
+paths:
+  # --- UTILISATEURS ---
+  /api/utilisateurs:
+    get:
+      tags: [Utilisateurs]
+      summary: Lister les utilisateurs avec pagination
+      operationId: listerUtilisateurs
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/taille'
+        - name: recherche
+          in: query
+          schema:
+            type: string
+          description: Nom, prénom ou email
+      responses:
+        '200':
+          description: Liste paginée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageUtilisateur'
+    post:
+      tags: [Utilisateurs]
+      summary: Créer un nouvel utilisateur
+      operationId: creerUtilisateur
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UtilisateurForm'
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilisateurResponse'
+
+  /api/utilisateurs/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Utilisateurs]
+      summary: Récupérer un utilisateur par son ID
+      operationId: getUtilisateur
+      responses:
+        '200':
+          description: Utilisateur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtilisateurResponse'
+    put:
+      tags: [Utilisateurs]
+      summary: Modifier un utilisateur
+      operationId: modifierUtilisateur
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UtilisateurForm'
+      responses:
+        '200':
+          description: Mis à jour
+    delete:
+      tags: [Utilisateurs]
+      summary: Supprimer un utilisateur
+      operationId: supprimerUtilisateur
+      responses:
+        '204':
+          description: Supprimé
+
+  # --- COMMANDES ---
+  /api/commandes:
+    get:
+      tags: [Commandes]
+      summary: Lister les commandes filtrées
+      operationId: listerCommandes
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/taille'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/TypeCommande'
+        - name: statut
+          in: query
+          schema:
+            $ref: '#/components/schemas/StatutCommande'
+      responses:
+        '200':
+          description: Liste des commandes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageCommande'
+    post:
+      tags: [Commandes]
+      summary: Créer une commande
+      description: |
+        Crée une commande. On peut associer des vêtements existants via `vetementIds`.
+        Une facture est automatiquement envoyée par mail au client.
+      operationId: creerCommande
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CommandeForm'
+      responses:
+        '201':
+          description: Commande créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandeResponse'
+
+  /api/commandes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Commandes]
+      summary: Récupérer une commande (avec ses vêtements)
+      operationId: getCommande
+      responses:
+        '200':
+          description: Détails de la commande
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandeResponse'
+    delete:
+      tags: [Commandes]
+      summary: Supprimer une commande (cascade)
+      operationId: supprimerCommande
+      responses:
+        '204':
+          description: Supprimé
+
+  /api/commandes/utilisateur/{utilisateurId}:
+    get:
+      tags: [Commandes]
+      summary: Commandes d'un utilisateur
+      operationId: listerCommandesUtilisateur
+      parameters:
+        - name: utilisateurId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Liste des commandes de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommandeResponse'
+
+  /api/commandes/{id}/vetements:
+    post:
+      tags: [Commandes]
+      summary: Ajouter un vêtement existant à une commande
+      operationId: ajouterVetementACommande
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: vetementId
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Vêtement ajouté avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandeResponse'
+
+  # --- VETEMENTS ---
+  /api/vetements:
+    get:
+      tags: [Vêtements]
+      summary: Lister les vêtements
+      operationId: listerVetements
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/taille'
+      responses:
+        '200':
+          description: Liste des vêtements
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageVetement'
+    post:
+      tags: [Vêtements]
+      summary: Créer un vêtement (avec upload photo)
+      operationId: creerVetement
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VetementForm'
+      responses:
+        '201':
+          description: Vêtement créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VetementResponse'
+
+  /api/vetements/{id}/photo:
+    post:
+      tags: [Vêtements]
+      summary: Uploader une photo pour un vêtement
+      operationId: uploadPhoto
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Photo uploadée
+
+  # --- NOTIFICATIONS ---
+  /api/notifications/commandes/{commandeId}/facture:
+    post:
+      tags: [Notifications]
+      summary: Envoyer manuellement la facture d'une commande par mail
+      operationId: envoyerFactureManuelle
+      parameters:
+        - name: commandeId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Facture envoyée
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: Erreur lors de l'envoi
+
+  /api/notifications/rappels/declencher:
+    post:
+      tags: [Notifications]
+      summary: Déclencher manuellement la vérification des rappels (< 24h)
+      operationId: declencherRappels
+      responses:
+        '200':
+          description: Rappels envoyés
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/notifications/test:
+    post:
+      tags: [Notifications]
+      summary: Envoyer un mail de test à une adresse donnée
+      operationId: envoyerMailTest
+      parameters:
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Adresse email de destination
+      responses:
+        '200':
+          description: Mail envoyé
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 0
+    taille:
+      name: taille
+      in: query
+      schema:
+        type: integer
+        default: 10
+
+  schemas:
+    # --- UTILISATEUR ---
+    UtilisateurForm:
+      type: object
+      required: [nom, prenom, email, motDePasse]
+      properties:
+        nom: { type: string }
+        prenom: { type: string }
+        email: { type: string, format: email }
+        motDePasse: { type: string }
+        telephone: { type: string }
+
+    UtilisateurResponse:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        nom: { type: string }
+        prenom: { type: string }
+        email: { type: string }
+        telephone: { type: string }
+
+    PageUtilisateur:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/UtilisateurResponse'
+        totalElements: { type: integer }
+
+    # --- COMMANDE ---
+    TypeCommande:
+      type: string
+      enum: [NORMAL, RAPIDE, EXPRESS]
+    
+    StatutCommande:
+      type: string
+      enum: [EN_ATTENTE, EN_COURS, TERMINEE, LIVREE]
+
+    CommandeForm:
+      type: object
+      required: [type, utilisateurId]
+      properties:
+        type:
+          $ref: '#/components/schemas/TypeCommande'
+        statut:
+          $ref: '#/components/schemas/StatutCommande'
+        utilisateurId:
+          type: integer
+          format: int64
+        vetementIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    CommandeResponse:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        type: { $ref: '#/components/schemas/TypeCommande' }
+        statut: { $ref: '#/components/schemas/StatutCommande' }
+        dateCreation: { type: string, format: date-time }
+        dateLivraison: { type: string, format: date-time }
+        prixTotal: { type: number }
+        utilisateurId: { type: integer, format: int64 }
+        vetements:
+          type: array
+          items:
+            $ref: '#/components/schemas/VetementResponse'
+
+    PageCommande:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommandeResponse'
+
+    # --- VETEMENT ---
+    CategorieVetement:
+      type: string
+      enum: [CHEMISE, PANTALON, ROBE, VESTE, MANTEAU, JUPE, TSHIRT, COSTUME, AUTRE]
+
+    VetementForm:
+      type: object
+      required: [description, categorie]
+      properties:
+        description: { type: string }
+        categorie: { $ref: '#/components/schemas/CategorieVetement' }
+        couleur: { type: string }
+        codeCouleur: { type: string }
+        photo: { type: string, format: binary }
+
+    VetementResponse:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        sku: { type: string }
+        description: { type: string }
+        categorie: { $ref: '#/components/schemas/CategorieVetement' }
+        couleur: { type: string }
+        codeCouleur: { type: string }
+        photoUrl: { type: string }
+
+    PageVetement:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/VetementResponse'
