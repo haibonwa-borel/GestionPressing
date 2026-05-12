@@ -67,7 +67,7 @@
                                         th:onclick="openEditModal([[${u.id}]], [[${u.nom}]], [[${u.prenom}]], [[${u.email}]], [[${u.telephone}]])">
                                     <i class="fas fa-pen"></i> <span th:text="#{clients.edit}">Éditer</span>
                                 </button>
-                                <form th:action="@{/utilisateurs/{id}/delete(id=${u.id})}" method="post" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{clients.confirmDelete} + '\')'">
+                                <form th:action="@{/utilisateurs/{id}(id=${u.id})}" th:method="delete" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{clients.confirmDelete} + '\')'">
                                     <button type="submit" class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);">
                                         <i class="fas fa-trash"></i> <span th:text="#{clients.delete}">Supprimer</span>
                                     </button>
@@ -89,7 +89,7 @@
             <h2><i class="fas fa-user-plus" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{client.form.new}">Nouveau client</span></h2>
             <button class="close-btn" onclick="closeModal('modal')">×</button>
         </div>
-        <form id="form-add-client" th:action="@{/utilisateurs/add}" method="post">
+        <form id="form-add-client" th:action="@{/utilisateurs}" method="post">
             <div class="form-group">
                 <label th:text="#{client.form.firstName} + ' *'">Prénom *</label>
                 <input class="form-control" type="text" name="prenom" required placeholder="Jean">
@@ -127,7 +127,7 @@
             <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{client.form.edit}">Modifier le client</span></h2>
             <button class="close-btn" onclick="closeModal('modal-edit')">×</button>
         </div>
-        <form id="form-edit-client" th:action="@{/utilisateurs/edit}" method="post">
+        <form id="form-edit-client" action="/utilisateurs" th:method="put">
             <input type="hidden" id="edit-id" name="id">
             <div class="form-group">
                 <label th:text="#{client.form.firstName} + ' *'">Prénom *</label>
@@ -163,6 +163,7 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 
 function openEditModal(id, nom, prenom, email, telephone) {
+    document.getElementById('form-edit-client').action = '/utilisateurs/' + id;
     document.getElementById('edit-id').value = id;
     document.getElementById('edit-nom').value = nom;
     document.getElementById('edit-prenom').value = prenom;

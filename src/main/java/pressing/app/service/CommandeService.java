@@ -31,16 +31,13 @@ public class CommandeService {
 
     private final CommandeRepository commandeRepository;
     private final VetementRepository vetementRepository;
-    private final NotificationService notificationService;
 
     private static final double PRIX_BASE = 1000.0;
 
     public CommandeService(CommandeRepository commandeRepository,
-                           VetementRepository vetementRepository,
-                           NotificationService notificationService) {
+                           VetementRepository vetementRepository) {
         this.commandeRepository = commandeRepository;
         this.vetementRepository = vetementRepository;
-        this.notificationService = notificationService;
     }
 
     private double calculerPrix(TypeCommande type, int nbVetements) {
@@ -81,14 +78,6 @@ public class CommandeService {
         entity.setPrixTotal(calculerPrix(entity.getType(), nbVetements));
 
         Commande saved = commandeRepository.save(entity);
-
-        // Envoi automatique de la facture par mail
-        try {
-            notificationService.envoyerFacture(saved.getId());
-        } catch (Exception e) {
-            System.err.println("Echec envoi auto facture : " + e.getMessage());
-        }
-
         return toDTO(saved);
     }
 

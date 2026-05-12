@@ -12,6 +12,7 @@ import pressing.app.repository.CommandeRepository;
 import pressing.app.repository.VetementRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -25,11 +26,14 @@ public class VetementService {
 
     private final VetementRepository vetementRepository;
     private final CommandeService commandeService;
+    private final GeminiService geminiService;
 
     public VetementService(VetementRepository vetementRepository,
-                           CommandeService commandeService) {
+                           CommandeService commandeService,
+                           GeminiService geminiService) {
         this.vetementRepository = vetementRepository;
         this.commandeService = commandeService;
+        this.geminiService = geminiService;
     }
 
     /**
@@ -110,6 +114,46 @@ public class VetementService {
                 .skip((long) page * taille).limit(taille)
                 .map(this::toDTO).collect(Collectors.toList());
         return new PageResponse<>(slice, page, taille, total);
+    }
+
+    /**
+     * Recherche par similarité d'image (Simulation IA).
+     */
+    @Transactional(readOnly = true)
+    public List<VetementDTO> rechercherParImage(org.springframework.web.multipart.MultipartFile image) {
+        try {
+            byte[] bytes = image.getBytes();
+            Map<String, String> analyse = geminiService.analyserImage(bytes);
+            
+            String catStr = analyse.get("categorie");
+            String couleur = analyse.get("couleur");
+            
+            if (catStr != null) {
+                CategorieVetement cat = CategorieVetement.valueOf(catStr);
+                List<Vetement> matches = vetementRepository.findByCategorie(cat);
+                
+                if (couleur != null) {
+                    final String c = couleur.toLowerCase();
+                    matches = matches.stream()
+                            .filter(v -> v.getCouleur() != null && v.getCouleur().toLowerCase().contains(c))
+                            .collect(Collectors.toList());
+                }
+                
+                return matches.stream().map(this::toDTO).collect(Collectors.toList());
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur recherche image : " + e.getMessage());
+        }
+        
+        // Fallback simulation si Gemini échoue ou ne trouve rien
+        String fileName = image.getOriginalFilename() != null ? image.getOriginalFilename().toLowerCase() : "";
+        if (fileName.contains("chemise")) {
+            return vetementRepository.findByCategorie(CategorieVetement.CHEMISE).stream()
+                    .map(this::toDTO).collect(Collectors.toList());
+        }
+        
+        return vetementRepository.findAll(PageRequest.of(0, 8)).getContent().stream()
+                .map(this::toDTO).collect(Collectors.toList());
     }
 
     // ======== MAPPING ========

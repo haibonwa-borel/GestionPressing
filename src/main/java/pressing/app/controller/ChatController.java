@@ -1,38 +1,31 @@
 package pressing.app.controller;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import pressing.app.repository.CommandeRepository;
 import pressing.app.repository.UtilisateurRepository;
 import pressing.app.repository.VetementRepository;
+import pressing.app.service.GeminiService;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController {
 
-    @Value("${gemini.api.key:}")
-    private String apiKey;
-
-    private final RestTemplate restTemplate = new RestTemplate();
-    
+    private final GeminiService geminiService;
     private final UtilisateurRepository utilisateurRepository;
     private final CommandeRepository commandeRepository;
     private final VetementRepository vetementRepository;
 
     public ChatController(UtilisateurRepository utilisateurRepository,
                           CommandeRepository commandeRepository,
-                          VetementRepository vetementRepository) {
+                          VetementRepository vetementRepository,
+                          GeminiService geminiService) {
         this.utilisateurRepository = utilisateurRepository;
         this.commandeRepository = commandeRepository;
         this.vetementRepository = vetementRepository;
+        this.geminiService = geminiService;
     }
 
     @PostMapping
@@ -41,12 +34,6 @@ public class ChatController {
         if (message == null || message.isEmpty()) {
             return Collections.singletonMap("error", "Message vide");
         }
-
-        if (apiKey == null || apiKey.isEmpty()) {
-            return Collections.singletonMap("error", "Clé API Gemini non configurée");
-        }
-
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
         // Build Database Context
         StringBuilder context = new StringBuilder();
@@ -70,36 +57,6 @@ public class ChatController {
 
         context.append("\nRéponds de manière concise et professionnelle aux questions de l'utilisateur en te basant UNIQUEMENT sur ces données. Si tu ne trouves pas l'information dans ces données, dis-le.");
 
-        // Structure Gemini API request
-        Map<String, Object> geminiRequest = new HashMap<>();
-        
-        // System instruction
-        Map<String, Object> sysContent = new HashMap<>();
-        Map<String, String> sysPart = new HashMap<>();
-        sysPart.put("text", context.toString());
-        sysContent.put("parts", Collections.singletonList(sysPart));
-        geminiRequest.put("system_instruction", sysContent);
-
-        // User message
-        Map<String, Object> content = new HashMap<>();
-        Map<String, String> part = new HashMap<>();
-        part.put("text", message);
-        content.put("parts", Collections.singletonList(part));
-        geminiRequest.put("contents", Collections.singletonList(content));
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(geminiRequest, headers);
-
-        try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> response = restTemplate.postForObject(url, entity, Map.class);
-            return response;
-        } catch (Exception e) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Erreur lors de l'appel à Gemini : " + e.getMessage());
-            return error;
-        }
+        return geminiService.chat(message, context.toString());
     }
 }

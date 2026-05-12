@@ -58,4 +58,19 @@ public class FileStorageService {
             throw new RuntimeException("Impossible de stocker le fichier " + originalFileName + ". Veuillez réessayer!", ex);
         }
     }
+
+    /**
+     * Enregistre un tableau d'octets (ex: PDF généré) et retourne son nom généré.
+     */
+    public String stockerFichierPdf(byte[] data, String nomFichier) {
+        try {
+            // Générer un nom de fichier unique si besoin, ou utiliser celui fourni
+            String newFileName = UUID.randomUUID().toString() + "_" + nomFichier;
+            Path targetLocation = this.fileStorageLocation.resolve(newFileName);
+            Files.write(targetLocation, data);
+            return newFileName;
+        } catch (IOException ex) {
+            throw new RuntimeException("Impossible de stocker le fichier PDF. Veuillez réessayer!", ex);
+        }
+    }
 }

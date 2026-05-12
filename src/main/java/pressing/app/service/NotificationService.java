@@ -25,24 +25,26 @@ public class NotificationService {
     private final PdfService pdfService;
     private final CommandeRepository commandeRepository;
     private final UtilisateurRepository utilisateurRepository;
+    private final FileStorageService fileStorageService;
 
     public NotificationService(EmailService emailService,
                                PdfService pdfService,
                                CommandeRepository commandeRepository,
-                               UtilisateurRepository utilisateurRepository) {
+                               UtilisateurRepository utilisateurRepository,
+                               FileStorageService fileStorageService) {
         this.emailService = emailService;
         this.pdfService = pdfService;
         this.commandeRepository = commandeRepository;
         this.utilisateurRepository = utilisateurRepository;
+        this.fileStorageService = fileStorageService;
     }
 
     /**
      * Genere et envoie la facture d'une commande.
-     * Etape 1 : Generation du PDF (asynchrone dans un thread separe)
-     * Etape 2 : Envoi du mail avec le PDF en piece jointe (asynchrone dans un autre thread)
-     * Les deux etapes sont chainees avec CompletableFuture.
+     * Etape 1 : Generation du PDF et sauvegarde (synchrone)
+     * Etape 2 : Envoi du mail avec le PDF en piece jointe (asynchrone)
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public void envoyerFacture(Long commandeId) {
         Commande commande = commandeRepository.findById(commandeId)
                 .orElseThrow(() -> new RuntimeException("Commande non trouvée : " + commandeId));
@@ -51,28 +53,44 @@ public class NotificationService {
                 .orElseThrow(() -> new RuntimeException("Client non trouvé : " + commande.getUtilisateurId()));
 
         String subject = "Facture de votre commande #" + commande.getId();
-        String html = genererHtmlFacture(commande, client);
         String nomFichier = "Facture_Commande_" + commande.getId() + ".pdf";
+        byte[] pdfBytes = null;
 
-        System.out.println("[NotificationService] Lancement generation PDF async pour commande #" + commandeId);
+        System.out.println("[NotificationService] Vérification facture pour commande #" + commandeId);
 
-        // Etape 1 : Generer le PDF de maniere asynchrone
-        CompletableFuture<byte[]> futurePdf = pdfService.genererPdfAsync(html, "Facture #" + commande.getId());
-
-        // Etape 2 : Une fois le PDF genere, envoyer le mail de maniere asynchrone
-        futurePdf.thenAccept(pdfBytes -> {
-            System.out.println("[NotificationService] PDF pret, lancement envoi email async pour commande #" + commandeId);
-            if (pdfBytes != null) {
-                emailService.envoyerEmailHtmlAvecPieceJointeAsync(client.getEmail(), subject, html, pdfBytes, nomFichier);
+        try {
+            if (commande.getFactureUrl() == null) {
+                // Generer le PDF de maniere synchrone
+                String html = genererHtmlFacture(commande, client);
+                pdfBytes = pdfService.genererPdfSync(html, "Facture #" + commande.getId());
+                
+                if (pdfBytes != null) {
+                    // Sauvegarder sur le disque
+                    String savedFileName = fileStorageService.stockerFichierPdf(pdfBytes, nomFichier);
+                    commande.setFactureUrl(savedFileName);
+                    commandeRepository.save(commande);
+                    System.out.println("[NotificationService] Facture générée et sauvegardée sous : " + savedFileName);
+                }
             } else {
-                // Fallback : envoyer le mail sans PDF si la generation a echoue
-                System.out.println("[NotificationService] PDF null, envoi email sans piece jointe");
-                emailService.envoyerEmailHtmlAsync(client.getEmail(), subject, html);
+                // Lire depuis le disque si deja genere
+                java.nio.file.Path path = java.nio.file.Paths.get("uploads", commande.getFactureUrl());
+                if (java.nio.file.Files.exists(path)) {
+                    pdfBytes = java.nio.file.Files.readAllBytes(path);
+                }
             }
-        }).exceptionally(ex -> {
-            System.err.println("[NotificationService] Erreur lors du pipeline facture : " + ex.getMessage());
-            return null;
-        });
+            
+            // Envoi de l'email asynchrone
+            if (pdfBytes != null) {
+                System.out.println("[NotificationService] Lancement envoi email async pour commande #" + commandeId);
+                emailService.envoyerEmailHtmlAvecPieceJointeAsync(client.getEmail(), subject, genererHtmlFacture(commande, client), pdfBytes, nomFichier);
+            } else {
+                System.out.println("[NotificationService] PDF null, envoi email sans piece jointe");
+                emailService.envoyerEmailHtmlAsync(client.getEmail(), subject, genererHtmlFacture(commande, client));
+            }
+            
+        } catch (Exception ex) {
+            System.err.println("[NotificationService] Erreur lors du traitement de la facture : " + ex.getMessage());
+        }
     }
 
     /**

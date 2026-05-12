@@ -100,7 +100,10 @@
                                             th:onclick="'envoyerFacture(' + ${c.id} + ')'" title="Envoyer facture">
                                         <i class="fas fa-envelope"></i>
                                     </button>
-                                    <form th:action="@{/commandes/{id}/delete(id=${c.id})}" method="post" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{orders.confirmDelete} + '\')'">
+                                    <a th:if="${c.factureUrl != null}" th:href="@{/commandes/{id}/facture(id=${c.id})}" class="yt-btn" style="padding: 6px 10px; font-size: 12px; background: var(--yt-accent); color: #000;" title="Télécharger facture">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <form th:action="@{/commandes/{id}(id=${c.id})}" th:method="delete" style="display:inline;" th:attr="onsubmit='return confirm(\'' + #{orders.confirmDelete} + '\')'">
                                         <button type="submit" class="yt-btn" style="padding: 6px 10px; font-size: 12px; color: var(--yt-red);" title="Supprimer">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -143,7 +146,7 @@
             <h2><i class="fas fa-shopping-bag" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{order.form.new}">Nouvelle commande</span></h2>
             <button class="close-btn" onclick="closeModal('modal-add-commande')">×</button>
         </div>
-        <form id="form-add-commande" th:action="@{/commandes/add}" method="post">
+        <form id="form-add-commande" th:action="@{/commandes}" method="post">
             <div class="form-group">
                 <label th:text="#{order.form.client} + ' *'">Client *</label>
                 <select class="form-control" name="utilisateurId" required>
@@ -191,7 +194,7 @@
             <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{order.form.edit}">Modifier la commande</span></h2>
             <button class="close-btn" onclick="closeModal('modal-edit-commande')">×</button>
         </div>
-        <form id="form-edit-commande" th:action="@{/commandes/edit}" method="post">
+        <form id="form-edit-commande" action="/commandes" th:method="put">
             <input type="hidden" id="edit-cmd-id" name="id">
             <input type="hidden" id="edit-cmd-utilisateurId" name="utilisateurId">
             <div class="form-group">
@@ -347,6 +350,7 @@ function voirVetements(id) {
 }
 
 function openEditCommandeModal(id, type, statut, utilisateurId) {
+    document.getElementById('form-edit-commande').action = '/commandes/' + id;
     document.getElementById('edit-cmd-id').value = id;
     document.getElementById('edit-cmd-type').value = type;
     document.getElementById('edit-cmd-statut').value = statut;

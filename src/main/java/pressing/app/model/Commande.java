@@ -38,6 +38,9 @@ public class Commande {
     @Column(name = "utilisateur_id", nullable = false)
     private Long utilisateurId;
 
+    @Column(name = "facture_url")
+    private String factureUrl;
+
     /**
      * Proprietaire de la relation ManyToMany.
      * La table de jointure "commande_vetement" est geree automatiquement par JPA.
@@ -91,4 +94,7 @@ public class Commande {
 
     public List<Vetement> getVetements() { return vetements; }
     public void setVetements(List<Vetement> vetements) { this.vetements = vetements; }
+
+    public String getFactureUrl() { return factureUrl; }
+    public void setFactureUrl(String factureUrl) { this.factureUrl = factureUrl; }
 }

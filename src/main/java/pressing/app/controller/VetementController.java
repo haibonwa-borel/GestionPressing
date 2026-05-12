@@ -94,6 +94,11 @@ public class VetementController {
         return ResponseEntity.ok(service.listerParCommande(commandeId));
     }
 
+    @PostMapping(value = "/api/vetements/recherche-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<VetementDTO>> rechercherParImage(@RequestParam("image") MultipartFile image) {
+        return ResponseEntity.ok(service.rechercherParImage(image));
+    }
+
     private void gererUploadPhoto(VetementDTO dto, MultipartFile photo) {
         if (photo != null && !photo.isEmpty()) {
             String fileName = fileStorageService.stockerFichier(photo);

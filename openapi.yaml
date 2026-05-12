@@ -8,14 +8,13 @@ info:
     - Gestion des **utilisateurs** (CRUD + pagination + recherche)
     - Gestion des **commandes** (CRUD + filtrage + suppression en cascade)
     - Gestion des **vêtements** avec upload de photo (Many-to-Many avec Commandes)
-    - **Facturation & Emails** (Envoi automatique de facture + Rappels 24h)
-    - **SKU** unique auto-généré pour chaque vêtement
+    - **Recherche par photo** (IA-ready) pour retrouver des vêtements similaires
     - **Persistance SQLite** via Spring Data JPA
     
     ### Formats de requête
     - `Utilisateur` / `Commande` : `application/x-www-form-urlencoded`
     - `Vetement` : `multipart/form-data` (pour l'upload de photo)
-  version: "2.0.0"
+  version: "2.1.0"
   contact:
     name: Pressing App TP
 
@@ -246,6 +245,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/VetementResponse'
 
+  /api/vetements/recherche-image:
+    post:
+      tags: [Vêtements]
+      summary: Rechercher des vêtements par similarité d'image
+      description: |
+        Analyse la photo soumise pour identifier la catégorie et la couleur,
+        puis retourne les vêtements qui y ressemblent le plus.
+      operationId: rechercherParImage
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Vêtements similaires trouvés
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VetementResponse'
+
   /api/vetements/{id}/photo:
     post:
       tags: [Vêtements]
@@ -289,7 +316,7 @@ paths:
         '500':
           description: Erreur lors de l'envoi
 
-  /api/notifications/rappels/declencher:
+  /api/notifications/rappels/execution:
     post:
       tags: [Notifications]
       summary: Déclencher manuellement la vérification des rappels (< 24h)

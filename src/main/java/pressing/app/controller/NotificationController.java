@@ -63,7 +63,7 @@ public class NotificationController {
     /**
      * Declencher manuellement la verification des rappels (moins de 24h).
      */
-    @PostMapping("/rappels/declencher")
+    @PostMapping("/rappels/execution")
     public ResponseEntity<String> declencherRappels() {
         try {
             int nbEnvoyes = notificationService.declencherRappelsManuels();
