@@ -23,6 +23,8 @@ import java.nio.file.Paths;
 @RequestMapping("/commandes")
 public class CommandeUIController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CommandeUIController.class);
+
     private final CommandeRepository commandeRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final VetementRepository vetementRepository;
@@ -70,12 +72,14 @@ public class CommandeUIController {
             @PathVariable Long id,
             @ModelAttribute CommandeDTO dto) {
         commandeService.modifier(id, dto);
+        log.info(" ACTION : Commande ID [{}] modifiée.", id);
         return "redirect:/commandes";
     }
 
     @DeleteMapping("/{id}")
     public String supprimerCommande(@PathVariable Long id) {
         commandeService.supprimer(id);
+        log.warn(" ACTION : Commande ID [{}] supprimée.", id);
         return "redirect:/commandes";
     }
 

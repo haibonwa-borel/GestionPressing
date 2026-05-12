@@ -194,7 +194,7 @@
             <h2><i class="fas fa-pen" style="color: var(--yt-accent); margin-right: 8px;"></i><span th:text="#{order.form.edit}">Modifier la commande</span></h2>
             <button class="close-btn" onclick="closeModal('modal-edit-commande')">×</button>
         </div>
-        <form id="form-edit-commande" action="/commandes" th:method="put">
+        <form id="form-edit-commande" th:action="@{/commandes}" th:method="put">
             <input type="hidden" id="edit-cmd-id" name="id">
             <input type="hidden" id="edit-cmd-utilisateurId" name="utilisateurId">
             <div class="form-group">
@@ -289,7 +289,11 @@ function showToast(msg) {
 }
 
 function envoyerFacture(id) {
-    fetch('/api/notifications/commandes/' + id + '/facture', { method: 'POST' })
+    const csrf = getCsrfConfig();
+    fetch('/api/notifications/commandes/' + id + '/facture', { 
+        method: 'POST',
+        headers: { [csrf.header]: csrf.token }
+    })
         .then(res => res.text())
         .then(data => showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + data))
         .catch(err => showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err));
@@ -369,8 +373,10 @@ function submitInlineVetement(e) {
     const form = e.target;
     const formData = new FormData(form);
     
+    const csrf = getCsrfConfig();
     fetch('/api/vetements', {
         method: 'POST',
+        headers: { [csrf.header]: csrf.token },
         body: formData
     })
     .then(res => {

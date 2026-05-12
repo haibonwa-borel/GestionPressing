@@ -36,6 +36,11 @@ public class UtilisateurDTO {
     @TelephoneValide
     private String telephone;
 
+    /**
+     * Role de l'utilisateur : ADMIN ou CLIENT.
+     */
+    private String role;
+
     public UtilisateurDTO() {}
 
     // Getters et Setters
@@ -56,4 +61,7 @@ public class UtilisateurDTO {
 
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

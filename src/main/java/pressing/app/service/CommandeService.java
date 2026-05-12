@@ -1,5 +1,7 @@
 package pressing.app.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class CommandeService {
+
+    private static final Logger log = LoggerFactory.getLogger(CommandeService.class);
 
     private final CommandeRepository commandeRepository;
     private final VetementRepository vetementRepository;
@@ -59,6 +63,7 @@ public class CommandeService {
     }
 
     public CommandeDTO creer(CommandeDTO dto) {
+        log.info("Creation d'une nouvelle commande pour l'utilisateur ID: {}", dto.getUtilisateurId());
         Commande entity = new Commande();
         entity.setType(dto.getType());
         entity.setStatut(dto.getStatut() != null ? dto.getStatut() : StatutCommande.EN_ATTENTE);
@@ -78,6 +83,7 @@ public class CommandeService {
         entity.setPrixTotal(calculerPrix(entity.getType(), nbVetements));
 
         Commande saved = commandeRepository.save(entity);
+        log.info("Commande creee avec succes - ID: {}, Prix: {}", saved.getId(), saved.getPrixTotal());
         return toDTO(saved);
     }
 
@@ -105,8 +111,13 @@ public class CommandeService {
      * grace au @JoinTable sur Commande.
      */
     public boolean supprimer(Long id) {
-        if (!commandeRepository.existsById(id)) return false;
+        log.info("Suppression de la commande ID: {}", id);
+        if (!commandeRepository.existsById(id)) {
+            log.warn("Tentative de suppression d'une commande inexistante - ID: {}", id);
+            return false;
+        }
         commandeRepository.deleteById(id);
+        log.info("Commande supprimee avec succes - ID: {}", id);
         return true;
     }
 

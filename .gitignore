@@ -1,44 +1,20 @@
-HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+*.class
+.mvn/
+mvnw
+mvnw.cmd
+.DS_Store
+.idea/
 *.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-### Secrets ###
-src/main/resources/application-secrets.properties
-
-### Application Files ###
-uploads/
+*.log
+logs/
 *.db
 *.db-shm
 *.db-wal
-*.pdf
-src/main/resources/keystore/*.p12
+.gemini/
+read_pdf.py
+read_pdf2.py
+DumpUsers.java
+pdf_out*.txt
+pdf_output*.txt
+application-secrets.properties

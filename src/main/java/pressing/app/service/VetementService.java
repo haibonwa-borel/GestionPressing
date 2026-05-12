@@ -1,5 +1,7 @@
 package pressing.app.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class VetementService {
 
+    private static final Logger log = LoggerFactory.getLogger(VetementService.class);
+
     private final VetementRepository vetementRepository;
     private final CommandeService commandeService;
     private final GeminiService geminiService;
@@ -40,11 +44,13 @@ public class VetementService {
      * Creer un vetement independant sans l'associer a une commande.
      */
     public VetementDTO creer(VetementDTO dto) {
+        log.info("Creation d'un nouveau vetement: {}", dto.getDescription());
         Vetement entity = toEntity(dto);
         if (entity.getSku() == null) {
             entity.setSku(Vetement.genererSku());
         }
         Vetement saved = vetementRepository.save(entity);
+        log.info("Vetement cree avec succes - ID: {}, SKU: {}", saved.getId(), saved.getSku());
         return toDTO(saved);
     }
 
@@ -81,8 +87,13 @@ public class VetementService {
     }
 
     public boolean supprimer(Long id) {
-        if (!vetementRepository.existsById(id)) return false;
+        log.info("Suppression du vetement ID: {}", id);
+        if (!vetementRepository.existsById(id)) {
+            log.warn("Tentative de suppression d'un vetement inexistant - ID: {}", id);
+            return false;
+        }
         vetementRepository.deleteById(id);
+        log.info("Vetement supprime avec succes - ID: {}", id);
         return true;
     }
 

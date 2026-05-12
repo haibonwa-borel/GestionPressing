@@ -118,7 +118,12 @@
             const btn = document.getElementById('btn-rappels');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + sendingText;
-            fetch('/api/notifications/rappels/declencher', { method: 'POST' })
+            
+            const csrf = getCsrfConfig();
+            fetch('/api/notifications/rappels/declencher', { 
+                method: 'POST',
+                headers: { [csrf.header]: csrf.token }
+            })
                 .then(res => res.text())
                 .then(data => { showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + data); })
                 .catch(err => { showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err); })

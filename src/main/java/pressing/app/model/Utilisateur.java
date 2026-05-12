@@ -29,6 +29,19 @@ public class Utilisateur {
     @Column(unique = true, length = 20)
     private String telephone;
 
+    /**
+     * Role de l'utilisateur : ADMIN ou CLIENT.
+     * Utilise pour l'autorisation Spring Security.
+     */
+    @Column(nullable = false, length = 20)
+    private String role = "CLIENT";
+
+    /**
+     * Indique si le compte est actif.
+     */
+    @Column(nullable = false)
+    private boolean actif = true;
+
     public Utilisateur() {}
 
     public Utilisateur(Long id, String nom, String prenom, String email, String motDePasse, String telephone) {
@@ -57,4 +70,10 @@ public class Utilisateur {
 
     public String getTelephone() { return telephone; }
     public void setTelephone(String telephone) { this.telephone = telephone; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+
+    public boolean isActif() { return actif; }
+    public void setActif(boolean actif) { this.actif = actif; }
 }

@@ -1,14 +1,15 @@
 -- =======================================================
 -- DONNEES DE TEST : chargees automatiquement au demarrage
+-- Mots de passe encodes avec BCrypt (tous = "password123")
 -- =======================================================
 
--- Utilisateurs
-INSERT OR IGNORE INTO utilisateurs (id, nom, prenom, email, mot_de_passe, telephone)
-VALUES (1, 'Dupont', 'Jean', 'jean@email.com', 'password123', '+33612345678');
-INSERT OR IGNORE INTO utilisateurs (id, nom, prenom, email, mot_de_passe, telephone)
-VALUES (2, 'Martin', 'Marie', 'marie@email.com', 'password123', '+33788776655');
-INSERT OR IGNORE INTO utilisateurs (id, nom, prenom, email, mot_de_passe, telephone)
-VALUES (3, 'Durand', 'Pierre', 'pierre@email.com', 'password123', '+237670001122');
+-- Utilisateurs (mot de passe BCrypt pour "password123")
+INSERT OR IGNORE INTO utilisateurs (id, nom, prenom, email, mot_de_passe, telephone, role, actif)
+VALUES (1, 'Dupont', 'Jean', 'admin@pressing.com', '$2b$12$1AvCpgfsdrvJTAupT6m.GeSA4YC7bRNDUpskfvmdgbFsQftFqnbYW', '+33612345678', 'ADMIN', 1);
+INSERT OR IGNORE INTO utilisateurs (id, nom, prenom, email, mot_de_passe, telephone, role, actif)
+VALUES (2, 'Martin', 'Marie', 'marie@email.com', '$2b$12$1AvCpgfsdrvJTAupT6m.GeSA4YC7bRNDUpskfvmdgbFsQftFqnbYW', '+33788776655', 'CLIENT', 1);
+INSERT OR IGNORE INTO utilisateurs (id, nom, prenom, email, mot_de_passe, telephone, role, actif)
+VALUES (3, 'Durand', 'Pierre', 'pierre@email.com', '$2b$12$1AvCpgfsdrvJTAupT6m.GeSA4YC7bRNDUpskfvmdgbFsQftFqnbYW', '+237670001122', 'CLIENT', 1);
 
 -- Vetements
 INSERT OR IGNORE INTO vetements (id, sku, description, categorie, couleur, code_couleur)

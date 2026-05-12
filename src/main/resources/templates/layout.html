@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- CSRF Meta Tags pour les requetes AJAX (PDF page 470) -->
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <!-- Apply theme BEFORE render to avoid flash -->
     <script>
+        // CSRF Utility for AJAX (PDF page 470)
+        function getCsrfConfig() {
+            const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            return { token, header };
+        }
+
         (function() {
             const saved = localStorage.getItem('pressing-theme') || 'dark';
             document.documentElement.setAttribute('data-theme', saved);
@@ -58,7 +69,20 @@
                 <i class="fas fa-moon" id="theme-icon"></i>
             </button>
             <button class="menu-btn"><i class="fas fa-bell"></i></button>
-            <button class="menu-btn"><i class="fas fa-user-circle"></i></button>
+            <!-- Infos utilisateur connecte -->
+            <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: var(--yt-text-secondary); font-size: 13px;">
+                    <i class="fas fa-user-circle" style="margin-right: 4px;"></i>
+                    <span sec:authentication="name">user</span>
+                </span>
+                <!-- Bouton deconnexion -->
+                <form th:action="@{/logout}" method="post" style="margin: 0;">
+                    <button type="submit" class="menu-btn" th:title="#{header.logout}"
+                            style="color: #EA4335; font-size: 14px;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </form>
+            </div>
         </div>
     </header>
 

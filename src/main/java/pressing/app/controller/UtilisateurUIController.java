@@ -11,6 +11,8 @@ import pressing.app.service.UtilisateurService;
 @RequestMapping("/utilisateurs")
 public class UtilisateurUIController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(UtilisateurUIController.class);
+
     private final UtilisateurRepository utilisateurRepository;
     private final UtilisateurService utilisateurService;
 
@@ -41,6 +43,7 @@ public class UtilisateurUIController {
         dto.setMotDePasse(motDePasse);
         dto.setTelephone(telephone);
         utilisateurService.creer(dto);
+        log.info(" ACTION : Nouvel utilisateur créé : {} ({})", dto.getEmail(), dto.getNom());
         return "redirect:/utilisateurs";
     }
 
@@ -57,12 +60,14 @@ public class UtilisateurUIController {
         dto.setEmail(email);
         dto.setTelephone(telephone);
         utilisateurService.modifier(id, dto);
+        log.info(" ACTION : Utilisateur ID [{}] modifié : {}", id, dto.getEmail());
         return "redirect:/utilisateurs";
     }
 
     @DeleteMapping("/{id}")
     public String supprimerUtilisateur(@PathVariable Long id) {
         utilisateurService.supprimer(id);
+        log.warn(" ACTION : Utilisateur ID [{}] supprimé.", id);
         return "redirect:/utilisateurs";
     }
 }

@@ -14,6 +14,8 @@ import pressing.app.service.VetementService;
 @RequestMapping("/vetements")
 public class VetementUIController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(VetementUIController.class);
+
     private final VetementRepository vetementRepository;
     private final VetementService vetementService;
     private final FileStorageService fileStorageService;
@@ -39,6 +41,7 @@ public class VetementUIController {
             @RequestParam(value = "photo", required = false) MultipartFile photo) {
         gererUploadPhoto(dto, photo);
         vetementService.creer(dto);
+        log.info(" ACTION : Nouveau vêtement créé : {}", dto.getDescription());
         return "redirect:/vetements";
     }
 
@@ -49,12 +52,14 @@ public class VetementUIController {
             @RequestParam(value = "photo", required = false) MultipartFile photo) {
         gererUploadPhoto(dto, photo);
         vetementService.modifier(id, dto);
+        log.info(" ACTION : Vêtement ID [{}] modifié : {}", id, dto.getDescription());
         return "redirect:/vetements";
     }
 
     @DeleteMapping("/{id}")
     public String supprimerVetement(@PathVariable Long id) {
         vetementService.supprimer(id);
+        log.warn(" ACTION : Vêtement ID [{}] supprimé.", id);
         return "redirect:/vetements";
     }
 
