@@ -34,3 +34,11 @@ build/
 
 ### Secrets ###
 src/main/resources/application-secrets.properties
+
+### Application Files ###
+uploads/
+*.db
+*.db-shm
+*.db-wal
+*.pdf
+src/main/resources/keystore/*.p12
