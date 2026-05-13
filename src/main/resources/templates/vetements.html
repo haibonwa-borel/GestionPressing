@@ -59,12 +59,22 @@
 
             <!-- Vue Grille (YouTube style) -->
             <div id="view-grid" class="grid-container">
+                <div id="no-results" style="display: none; grid-column: 1/-1; text-align: center; color: var(--yt-text-secondary); padding: 60px;">
+                    <i class="fas fa-search" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                    <span>Pas de résultat pour cette recherche</span>
+                </div>
+
+                <div id="grid-loader" class="loader-container">
+                    <div class="spinner"></div>
+                    <span th:text="#{clothes.searching}">Recherche en cours...</span>
+                </div>
+
                 <div th:if="${#lists.isEmpty(vetements)}"
                      style="grid-column: 1/-1; text-align: center; color: var(--yt-text-secondary); padding: 60px;">
                     <i class="fas fa-tshirt" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
                     <span th:text="#{clothes.empty}">Aucun vêtement enregistré</span>
                 </div>
-                <div th:each="v : ${vetements}" class="card">
+                <div th:each="v : ${vetements}" class="card" th:attr="data-id=${v.id}">
                     <!-- Thumbnail -->
                     <div class="card-thumbnail"
                          style="display: flex; align-items: center; justify-content: center; position: relative;">
@@ -129,7 +139,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="v : ${vetements}">
+                        <tr th:each="v : ${vetements}" th:attr="data-id=${v.id}">
                             <td style="font-family: monospace; font-size: 12px; color: var(--yt-accent);" th:text="${v.sku}">-</td>
                             <td th:text="${v.description}">-</td>
                             <td>
@@ -271,32 +281,27 @@
 function filterVetements() {
     const textFilter = document.getElementById('search-vetements').value.toLowerCase();
     const catFilter = document.getElementById('filter-cat').value.toLowerCase();
+    let count = 0;
 
     // Filtrer la vue grille
     const gridItems = document.getElementById('view-grid').getElementsByClassName('card');
     for (let i = 0; i < gridItems.length; i++) {
         const text = gridItems[i].textContent || gridItems[i].innerText;
-        const badges = gridItems[i].getElementsByTagName('span');
-        let catBadge = "";
-        // Find the category badge (usually the last span with absolute positioning)
-        for(let j = 0; j < badges.length; j++) {
-            if(badges[j].style.position === 'absolute') {
-                catBadge = badges[j].textContent.toLowerCase();
-            }
-        }
+        const catBadge = gridItems[i].querySelector('.card-thumbnail span')?.textContent.toLowerCase() || "";
         
         const matchesText = text.toLowerCase().indexOf(textFilter) > -1;
         const matchesCat = catFilter === "" || catBadge === catFilter;
         
-        gridItems[i].style.display = (matchesText && matchesCat) ? "" : "none";
+        const visible = matchesText && matchesCat;
+        gridItems[i].style.display = visible ? "" : "none";
+        if (visible) count++;
     }
 
     // Filtrer la vue liste
     const tr = document.getElementById('table-vetements').getElementsByTagName("tr");
     for (let i = 1; i < tr.length; i++) {
-        const text = tr[i].textContent || tr[i].innerText;
         if (tr[i].cells.length === 1 && tr[i].textContent.includes('Aucun')) continue;
-        
+        const text = tr[i].textContent || tr[i].innerText;
         const catCell = tr[i].cells[2].textContent.trim().toLowerCase();
         
         const matchesText = text.toLowerCase().indexOf(textFilter) > -1;
@@ -304,6 +309,8 @@ function filterVetements() {
         
         tr[i].style.display = (matchesText && matchesCat) ? "" : "none";
     }
+
+    document.getElementById('no-results').style.display = (count === 0 && gridItems.length > 0) ? "block" : "none";
 }
 
 function searchByImage(input) {
@@ -312,7 +319,14 @@ function searchByImage(input) {
     const formData = new FormData();
     formData.append('image', input.files[0]);
     
-    showToast('<i class="fas fa-spinner fa-spin"></i> Analyse de l\'image...');
+    const grid = document.getElementById('view-grid');
+    const loader = document.getElementById('grid-loader');
+    const noResults = document.getElementById('no-results');
+    
+    // UI Feedback
+    grid.classList.add('searching-pulse');
+    loader.style.display = 'flex';
+    noResults.style.display = 'none';
     
     const csrf = getCsrfConfig();
     fetch('/api/vetements/recherche-image', {
@@ -322,30 +336,40 @@ function searchByImage(input) {
     })
     .then(res => res.json())
     .then(data => {
-        // Filtrer manuellement la vue pour ne montrer que ces IDs
-        const ids = data.map(v => v.id);
+        grid.classList.remove('searching-pulse');
+        loader.style.display = 'none';
         
-        // Grille
-        const gridItems = document.getElementById('view-grid').getElementsByClassName('card');
-        for (let i = 0; i < gridItems.length; i++) {
-            // Need to find the ID. It's in the onclick of the pen button.
-            // Simplified: we'll use a data-id attribute if we had one.
-            // Let's assume we can hide everything not in the list.
-            // For now, I'll just refresh the page with a filter or something, 
-            // but let's try to hide DOM elements.
-            gridItems[i].style.display = "none";
+        const resultIds = data.map(v => v.id.toString());
+        let count = 0;
+        
+        // Filtrer la Grille
+        const gridItems = grid.querySelectorAll('.card');
+        gridItems.forEach(card => {
+            const id = card.getAttribute('data-id');
+            const isMatch = resultIds.includes(id);
+            card.style.display = isMatch ? "" : "none";
+            if (isMatch) count++;
+        });
+
+        // Filtrer la Liste
+        const tableRows = document.querySelectorAll('#table-vetements tbody tr');
+        tableRows.forEach(row => {
+            const id = row.getAttribute('data-id');
+            row.style.display = resultIds.includes(id) ? "" : "none";
+        });
+        
+        if (count === 0) {
+            noResults.style.display = 'block';
+            showToast('<i class="fas fa-search"></i> Pas de résultat trouvé.');
+        } else {
+            showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + count + ' vêtements similaires trouvés.');
         }
-        
-        // This is complex without data-id. Let's just show a toast for now 
-        // or re-render if we had a JS framework.
-        // Instead, let's just highlight the results.
-        showToast('<i class="fas fa-check-circle" style="color:var(--yt-green)"></i> ' + data.length + ' vêtements similaires trouvés.');
-        
-        // Actually, let's just use the existing filterTable logic if possible.
-        // Or just reload with results.
-        console.log("Résultats image search:", data);
     })
-    .catch(err => showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err));
+    .catch(err => {
+        grid.classList.remove('searching-pulse');
+        loader.style.display = 'none';
+        showToast('<i class="fas fa-exclamation-circle" style="color:var(--yt-red)"></i> Erreur : ' + err);
+    });
 }
 
 function showToast(msg) {

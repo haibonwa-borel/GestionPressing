@@ -71,9 +71,9 @@ public class VetementController {
     }
 
     @DeleteMapping("/api/vetements/{id}")
-    public ResponseEntity<String> supprimer(@PathVariable Long id) {
+    public ResponseEntity<java.util.Map<String, String>> supprimer(@PathVariable Long id) {
         if (service.supprimer(id)) {
-            return ResponseEntity.ok("Vetement supprime");
+            return ResponseEntity.ok(java.util.Collections.singletonMap("message", "Vetement supprime"));
         }
         return ResponseEntity.notFound().build();
     }

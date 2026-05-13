@@ -22,7 +22,12 @@ servers:
   - url: http://localhost:8080
     description: Serveur local de développement
 
+security:
+  - cookieAuth: []
+
 tags:
+  - name: Authentification
+    description: Connexion et déconnexion de l'API (génère le cookie JSESSIONID)
   - name: Utilisateurs
     description: Gestion des clients du pressing
   - name: Commandes
@@ -33,6 +38,48 @@ tags:
     description: Envoi manuel de factures et déclenchement des rappels
 
 paths:
+  # --- AUTHENTIFICATION ---
+  /login:
+    post:
+      tags: [Authentification]
+      summary: Se connecter à l'API
+      description: |
+        Authentification via formulaire. En cas de succès, Spring Security
+        retourne un cookie JSESSIONID à utiliser pour les requêtes suivantes.
+        
+        **Attention pour Postman** : La protection CSRF est active sur cette route.
+        Vous devez d'abord faire un `GET /login` pour récupérer le cookie `XSRF-TOKEN`,
+        puis l'inclure dans l'en-tête `X-XSRF-TOKEN` lors de ce `POST /login`.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [email, motDePasse]
+              properties:
+                email:
+                  type: string
+                  format: email
+                motDePasse:
+                  type: string
+                  format: password
+      responses:
+        '302':
+          description: Redirection après connexion réussie (ou 200 selon le client)
+        '401':
+          description: Identifiants invalides
+
+  /logout:
+    post:
+      tags: [Authentification]
+      summary: Se déconnecter
+      operationId: logout
+      responses:
+        '302':
+          description: Redirection après déconnexion
+
   # --- UTILISATEURS ---
   /api/utilisateurs:
     get:
@@ -102,8 +149,12 @@ paths:
       summary: Supprimer un utilisateur
       operationId: supprimerUtilisateur
       responses:
-        '204':
+        '200':
           description: Supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
   # --- COMMANDES ---
   /api/commandes:
@@ -168,8 +219,12 @@ paths:
       summary: Supprimer une commande (cascade)
       operationId: supprimerCommande
       responses:
-        '204':
+        '200':
           description: Supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
   /api/commandes/utilisateur/{utilisateurId}:
     get:
@@ -245,6 +300,48 @@ paths:
               schema:
                 $ref: '#/components/schemas/VetementResponse'
 
+  /api/vetements/{id}:
+    parameters:
+      - $ref: '#/components/parameters/id'
+    get:
+      tags: [Vêtements]
+      summary: Récupérer un vêtement par son ID
+      operationId: getVetement
+      responses:
+        '200':
+          description: Vêtement trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VetementResponse'
+    put:
+      tags: [Vêtements]
+      summary: Modifier un vêtement (avec upload photo optionnel)
+      operationId: modifierVetement
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VetementForm'
+      responses:
+        '200':
+          description: Mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VetementResponse'
+    delete:
+      tags: [Vêtements]
+      summary: Supprimer un vêtement
+      operationId: supprimerVetement
+      responses:
+        '200':
+          description: Supprimé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
   /api/vetements/recherche-image:
     post:
       tags: [Vêtements]
@@ -310,11 +407,15 @@ paths:
         '200':
           description: Facture envoyée
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/MessageResponse'
         '500':
           description: Erreur lors de l'envoi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
   /api/notifications/rappels/execution:
     post:
@@ -325,9 +426,15 @@ paths:
         '200':
           description: Rappels envoyés
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erreur lors du déclenchement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
   /api/notifications/test:
     post:
@@ -345,11 +452,23 @@ paths:
         '200':
           description: Mail envoyé
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
+                $ref: '#/components/schemas/MessageResponse'
+        '500':
+          description: Erreur lors de l'envoi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
 components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+
   parameters:
     id:
       name: id
@@ -372,6 +491,12 @@ components:
         default: 10
 
   schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message: { type: string }
+        error: { type: string }
+        
     # --- UTILISATEUR ---
     UtilisateurForm:
       type: object

@@ -54,9 +54,9 @@ public class CommandeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> supprimer(@PathVariable Long id) {
+    public ResponseEntity<java.util.Map<String, String>> supprimer(@PathVariable Long id) {
         if (service.supprimer(id)) {
-            return ResponseEntity.ok("Commande supprimee");
+            return ResponseEntity.ok(java.util.Collections.singletonMap("message", "Commande supprimee"));
         }
         return ResponseEntity.notFound().build();
     }

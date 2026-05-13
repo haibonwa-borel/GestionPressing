@@ -48,9 +48,9 @@ public class UtilisateurController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> supprimer(@PathVariable Long id) {
+    public ResponseEntity<java.util.Map<String, String>> supprimer(@PathVariable Long id) {
         if (service.supprimer(id)) {
-            return ResponseEntity.ok("Utilisateur supprime");
+            return ResponseEntity.ok(java.util.Collections.singletonMap("message", "Utilisateur supprime"));
         }
         return ResponseEntity.notFound().build();
     }

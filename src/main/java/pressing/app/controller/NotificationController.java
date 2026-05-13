@@ -2,6 +2,8 @@ package pressing.app.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Collections;
+import java.util.Map;
 import pressing.app.service.EmailService;
 import pressing.app.service.NotificationService;
 
@@ -25,7 +27,7 @@ public class NotificationController {
      * Exemple : POST /api/notifications/test?to=haibonwaborel@gmail.com
      */
     @PostMapping("/test")
-    public ResponseEntity<String> envoyerMailTest(@RequestParam String to) {
+    public ResponseEntity<Map<String, String>> envoyerMailTest(@RequestParam String to) {
         try {
             String html = """
                 <div style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 600px; margin: auto;
@@ -41,9 +43,9 @@ public class NotificationController {
                 </div>
                 """;
             emailService.envoyerEmailHtml(to, "Test - Configuration Email OK", html);
-            return ResponseEntity.ok("Mail de test envoyé avec succès à : " + to);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Mail de test envoyé avec succès à : " + to));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Erreur : " + e.getMessage());
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Erreur : " + e.getMessage()));
         }
     }
 
@@ -51,12 +53,12 @@ public class NotificationController {
      * Envoyer manuellement la facture d'une commande par mail.
      */
     @PostMapping("/commandes/{commandeId}/facture")
-    public ResponseEntity<String> envoyerFactureManuelle(@PathVariable Long commandeId) {
+    public ResponseEntity<Map<String, String>> envoyerFactureManuelle(@PathVariable Long commandeId) {
         try {
             notificationService.envoyerFacture(commandeId);
-            return ResponseEntity.ok("Facture envoyée avec succès par mail.");
+            return ResponseEntity.ok(Collections.singletonMap("message", "Facture envoyée avec succès par mail."));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Erreur lors de l'envoi : " + e.getMessage());
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Erreur lors de l'envoi : " + e.getMessage()));
         }
     }
 
@@ -64,12 +66,12 @@ public class NotificationController {
      * Declencher manuellement la verification des rappels (moins de 24h).
      */
     @PostMapping("/rappels/execution")
-    public ResponseEntity<String> declencherRappels() {
+    public ResponseEntity<Map<String, String>> declencherRappels() {
         try {
             int nbEnvoyes = notificationService.declencherRappelsManuels();
-            return ResponseEntity.ok("Rappels envoyés : " + nbEnvoyes);
+            return ResponseEntity.ok(Collections.singletonMap("message", "Rappels envoyés : " + nbEnvoyes));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Erreur lors du déclenchement : " + e.getMessage());
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Erreur lors du déclenchement : " + e.getMessage()));
         }
     }
 }
