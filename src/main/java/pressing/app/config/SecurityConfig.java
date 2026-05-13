@@ -2,30 +2,32 @@ package pressing.app.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import pressing.app.security.JwtAuthenticationFilter;
 
 /**
- * Configuration de Spring Security.
- * - Formulaire de connexion personnalise (/login)
- * - Protection CSRF activee
- * - Roles ADMIN / CLIENT pour l'autorisation
- * - BCrypt pour l'encodage des mots de passe
+ * Configuration Spring Security avec deux chaînes de filtres :
+ *
+ *  1. Chaîne API  (@Order(1)) : /api/**  — Stateless, JWT Bearer token
+ *  2. Chaîne Web  (@Order(2)) : tout le reste — Session + formulaire HTML
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     /**
-     * Bean PasswordEncoder utilisant BCrypt.
-     * BCrypt est l'algorithme recommande pour sa resistance
-     * aux attaques par force brute et rainbow tables.
+     * BCrypt pour l'encodage des mots de passe.
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -33,36 +35,69 @@ public class SecurityConfig {
     }
 
     /**
-     * Bean AuthenticationManager.
+     * AuthenticationManager partagé entre les deux chaînes.
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    /**
-     * Configuration de la chaine de filtres de securite.
-     * Definit les regles d'autorisation, le formulaire de login,
-     * la protection CSRF et la gestion du logout.
-     */
+    // =========================================================================
+    // CHAÎNE 1 — API REST (/api/**) — JWT, Stateless
+    // =========================================================================
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain apiFilterChain(HttpSecurity http,
+                                               JwtAuthenticationFilter jwtFilter) throws Exception {
+        http
+            .securityMatcher("/api/**")
+
+            // Pas de session côté serveur pour l'API
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+            // CSRF inutile en mode stateless
+            .csrf(csrf -> csrf.disable())
+
+            // Autorisations
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/login", "/api/logout").permitAll()
+                .anyRequest().authenticated()
+            )
+
+            // Retourner 401 JSON (pas une redirection vers /login)
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+            )
+
+            // Injecter le filtre JWT avant le filtre d'authentification par formulaire
+            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    // =========================================================================
+    // CHAÎNE 2 — Interface Web (Thymeleaf) — Session + formulaire
+    // =========================================================================
+    @Bean
+    @Order(2)
+    public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
         http
             // === AUTORISATION ===
             .authorizeHttpRequests(auth -> auth
                 // Pages et ressources publiques
-                .requestMatchers("/login", "/register", "/error", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
-                // API Swagger publique
-                .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
-                // Routes administration reservees aux ADMIN
+                .requestMatchers("/login", "/register", "/error",
+                                 "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
+                // Swagger UI
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html",
+                                 "/api-docs/**", "/v3/api-docs/**").permitAll()
+                // Administration
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                // API REST : accessibles aux utilisateurs authentifies
-                .requestMatchers("/api/**").authenticated()
-                // Toutes les autres requetes necessitent une authentification
+                // Tout le reste nécessite une authentification
                 .anyRequest().authenticated()
             )
 
-            // === FORMULAIRE DE CONNEXION ===
+            // === FORMULAIRE DE CONNEXION (Web) ===
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
@@ -73,7 +108,7 @@ public class SecurityConfig {
                 .permitAll()
             )
 
-            // === DECONNEXION ===
+            // === DÉCONNEXION (Web) ===
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
@@ -82,18 +117,15 @@ public class SecurityConfig {
                 .permitAll()
             )
 
-            // === PROTECTION CSRF ===
-            // CSRF active par defaut. Configuration pour les meta tags AJAX.
+            // === CSRF (activé pour le Web, désactivé pour /api via l'autre chaîne) ===
             .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                // Desactiver CSRF uniquement pour les routes API REST
-                .ignoringRequestMatchers("/api/**")
+                .ignoringRequestMatchers("/login", "/logout")
             )
 
             // === REMEMBER ME ===
             .rememberMe(remember -> remember
                 .key("pressing-app-remember-me-key")
-                .tokenValiditySeconds(86400) // 24 heures
+                .tokenValiditySeconds(86400)
             );
 
         return http.build();

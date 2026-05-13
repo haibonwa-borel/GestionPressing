@@ -4,6 +4,31 @@ info:
   description: |
     API REST pour la gestion d'un pressing.
     
+    ### Authentification dans Postman (JWT Bearer)
+    Cette API utilise des **tokens JWT**. Voici le flux :
+    
+    **Étape 1 — Login**
+    ```
+    POST /api/login
+    Body (x-www-form-urlencoded):
+      email      = admin@pressing.com
+      motDePasse = password123
+    ```
+    Réponse :
+    ```json
+    {
+      "token": "eyJhbGciOiJIUzM4...",
+      "type": "Bearer",
+      "role": "ROLE_ADMIN",
+      "expiresIn": "86400s (24h)"
+    }
+    ```
+    
+    **Étape 2 — Utiliser le token dans Postman**
+    Dans chaque requête suivante :
+    - Onglet **Authorization** > Type : **Bearer Token**
+    - Coller la valeur du champ `token` dans le champ **Token**
+    
     ### Fonctionnalités
     - Gestion des **utilisateurs** (CRUD + pagination + recherche)
     - Gestion des **commandes** (CRUD + filtrage + suppression en cascade)
@@ -14,7 +39,7 @@ info:
     ### Formats de requête
     - `Utilisateur` / `Commande` : `application/x-www-form-urlencoded`
     - `Vetement` : `multipart/form-data` (pour l'upload de photo)
-  version: "2.1.0"
+  version: "3.0.0"
   contact:
     name: Pressing App TP
 
@@ -23,11 +48,13 @@ servers:
     description: Serveur local de développement
 
 security:
-  - cookieAuth: []
+  - bearerAuth: []
 
 tags:
   - name: Authentification
-    description: Connexion et déconnexion de l'API (génère le cookie JSESSIONID)
+    description: |
+      Login REST — retourne un **JWT Bearer token** valable 24h.
+      Routes `/login` et `/logout` (sans `/api`) = interface Web HTML uniquement.
   - name: Utilisateurs
     description: Gestion des clients du pressing
   - name: Commandes
@@ -38,19 +65,24 @@ tags:
     description: Envoi manuel de factures et déclenchement des rappels
 
 paths:
-  # --- AUTHENTIFICATION ---
-  /login:
+  # --- AUTHENTIFICATION REST (API) ---
+  /api/login:
     post:
       tags: [Authentification]
-      summary: Se connecter à l'API
+      summary: Se connecter à l'API REST (obtenir un JWT)
       description: |
-        Authentification via formulaire. En cas de succès, Spring Security
-        retourne un cookie JSESSIONID à utiliser pour les requêtes suivantes.
+        Authentifie l'utilisateur et retourne un **JWT Bearer token**.
         
-        **Attention pour Postman** : La protection CSRF est active sur cette route.
-        Vous devez d'abord faire un `GET /login` pour récupérer le cookie `XSRF-TOKEN`,
-        puis l'inclure dans l'en-tête `X-XSRF-TOKEN` lors de ce `POST /login`.
-      operationId: login
+        ### Utilisation dans Postman
+        1. Exécuter cette requête avec vos identifiants
+        2. Copier la valeur du champ **`token`** dans la réponse
+        3. Dans chaque requête suivante :
+           - Onglet **Authorization** > Type : **Bearer Token**
+           - Coller le token dans le champ **Token**
+        
+        Le token expire après **24 heures**.
+      operationId: apiLogin
+      security: []  # Public - pas d'auth requise
       requestBody:
         required: true
         content:
@@ -62,23 +94,49 @@ paths:
                 email:
                   type: string
                   format: email
+                  example: admin@pressing.com
                 motDePasse:
                   type: string
                   format: password
+                  example: password123
       responses:
-        '302':
-          description: Redirection après connexion réussie (ou 200 selon le client)
+        '200':
+          description: Authentification réussie — JWT retourné
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT Bearer token à utiliser dans les requêtes suivantes
+                    example: "eyJhbGciOiJIUzM4NiJ9..."
+                  type: { type: string, example: "Bearer" }
+                  email: { type: string, example: "admin@pressing.com" }
+                  role: { type: string, example: "ROLE_ADMIN" }
+                  expiresIn: { type: string, example: "86400s (24h)" }
         '401':
           description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
-  /logout:
+  /api/logout:
     post:
       tags: [Authentification]
-      summary: Se déconnecter
-      operationId: logout
+      summary: Se déconnecter (stateless)
+      description: |
+        En mode JWT stateless, le logout est géré côté client — supprimez simplement votre token.
+        Cette route confirme la déconnexion.
+      operationId: apiLogout
       responses:
-        '302':
-          description: Redirection après déconnexion
+        '200':
+          description: Déconnexion confirmée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
 
   # --- UTILISATEURS ---
   /api/utilisateurs:
@@ -464,10 +522,13 @@ paths:
 
 components:
   securitySchemes:
-    cookieAuth:
-      type: apiKey
-      in: cookie
-      name: JSESSIONID
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Token JWT obtenu via POST /api/login.
+        Dans Postman : Authorization > Bearer Token > coller le token.
 
   parameters:
     id:

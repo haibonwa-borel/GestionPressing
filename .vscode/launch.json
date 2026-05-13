@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Pressing App (Maven - Recommandé)",
+      "request": "launch",
+      "mainClass": "pressing.app.AppApplication",
+      "projectName": "app",
+      "vmArgs": "-Dspring.profiles.active=dev,secrets",
+      "preLaunchTask": "mvn-compile"
+    }
+  ]
+}

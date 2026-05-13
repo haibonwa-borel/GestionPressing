@@ -1,3 +1,6 @@
 {
-  "java.debug.settings.onBuildFailureProceed": true
+  "java.debug.settings.onBuildFailureProceed": true,
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "maven.executable.path": "${workspaceFolder}/mvnw.cmd",
+  "java.compile.nullAnalysis.mode": "disabled"
 }
