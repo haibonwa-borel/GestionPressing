@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "GestionPressing API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "item": [
+    {
+      "name": "Utilisateurs",
+      "item": [
+        {
+          "name": "Lister utilisateurs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/utilisateurs?page=0&taille=10", "host": ["{{baseUrl}}"], "path": ["api","utilisateurs"], "query": [{"key":"page","value":"0"},{"key":"taille","value":"10"}] }
+          }
+        },
+        {
+          "name": "Créer utilisateur (form)",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/x-www-form-urlencoded"}],
+            "body": {"mode":"urlencoded","urlencoded":[{"key":"prenom","value":"Jean"},{"key":"nom","value":"Dupont"},{"key":"email","value":"jean@example.com"}]},
+            "url": { "raw": "{{baseUrl}}/api/utilisateurs", "host": ["{{baseUrl}}"], "path": ["api","utilisateurs"] }
+          }
+        },
+        {
+          "name": "Trouver utilisateur par id",
+          "request": {"method":"GET","url":{"raw":"{{baseUrl}}/api/utilisateurs/1","host":["{{baseUrl}}"],"path":["api","utilisateurs","1"]}}
+        },
+        {
+          "name": "Modifier utilisateur (form)",
+          "request": {"method":"PUT","header":[{"key":"Content-Type","value":"application/x-www-form-urlencoded"}],"body":{"mode":"urlencoded","urlencoded":[{"key":"prenom","value":"JeanMod"}]},"url":{"raw":"{{baseUrl}}/api/utilisateurs/1","host":["{{baseUrl}}"],"path":["api","utilisateurs","1"]}}
+        },
+        {
+          "name": "Supprimer utilisateur",
+          "request": {"method":"DELETE","url":{"raw":"{{baseUrl}}/api/utilisateurs/1","host":["{{baseUrl}}"],"path":["api","utilisateurs","1"]}}
+        },
+        {
+          "name": "Rechercher utilisateurs",
+          "request": {"method":"GET","url":{"raw":"{{baseUrl}}/api/utilisateurs/recherche?terme=Jean","host":["{{baseUrl}}"],"path":["api","utilisateurs","recherche"],"query":[{"key":"terme","value":"Jean"}]}}
+        }
+      ]
+    },
+    {
+      "name": "Commandes",
+      "item": [
+        {"name":"Lister commandes","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/commandes","host":["{{baseUrl}}"],"path":["api","commandes"]}}},
+        {"name":"Créer commande (form)","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/x-www-form-urlencoded"}],"body":{"mode":"urlencoded","urlencoded":[{"key":"utilisateurId","value":"1"},{"key":"type","value":"LAVAGE"}]},"url":{"raw":"{{baseUrl}}/api/commandes","host":["{{baseUrl}}"],"path":["api","commandes"]}}},
+        {"name":"Trouver commande par id","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/commandes/1","host":["{{baseUrl}}"],"path":["api","commandes","1"]}}},
+        {"name":"Modifier commande (form)","request":{"method":"PUT","header":[{"key":"Content-Type","value":"application/x-www-form-urlencoded"}],"body":{"mode":"urlencoded","urlencoded":[{"key":"statut","value":"EN_COURS"}]},"url":{"raw":"{{baseUrl}}/api/commandes/1","host":["{{baseUrl}}"],"path":["api","commandes","1"]}}},
+        {"name":"Supprimer commande","request":{"method":"DELETE","url":{"raw":"{{baseUrl}}/api/commandes/1","host":["{{baseUrl}}"],"path":["api","commandes","1"]}}},
+        {"name":"Lister commandes par utilisateur","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/commandes/utilisateur/1","host":["{{baseUrl}}"],"path":["api","commandes","utilisateur","1"]}}},
+        {"name":"Lister commandes par vetement","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/commandes/vetement/1","host":["{{baseUrl}}"],"path":["api","commandes","vetement","1"]}}}
+      ]
+    },
+    {
+      "name": "Vetements",
+      "item": [
+        {"name":"Lister vetements","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/vetements","host":["{{baseUrl}}"],"path":["api","vetements"]}}},
+        {"name":"Trouver vetement par id","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/vetements/1","host":["{{baseUrl}}"],"path":["api","vetements","1"]}}},
+        {"name":"Créer vetement (multipart)","request":{"method":"POST","header":[{"key":"Content-Type","value":"multipart/form-data"}],"body":{"mode":"formdata","formdata":[{"key":"description","value":"Chemise blanche"},{"key":"categorie","value":"HAUT"},{"key":"photo","type":"file","src":""}]},"url":{"raw":"{{baseUrl}}/api/vetements","host":["{{baseUrl}}"],"path":["api","vetements"]}}},
+        {"name":"Modifier vetement (multipart)","request":{"method":"PUT","header":[{"key":"Content-Type","value":"multipart/form-data"}],"body":{"mode":"formdata","formdata":[{"key":"description","value":"Chemise modif"},{"key":"photo","type":"file","src":""}]},"url":{"raw":"{{baseUrl}}/api/vetements/1","host":["{{baseUrl}}"],"path":["api","vetements","1"]}}},
+        {"name":"Supprimer vetement","request":{"method":"DELETE","url":{"raw":"{{baseUrl}}/api/vetements/1","host":["{{baseUrl}}"],"path":["api","vetements","1"]}}},
+        {"name":"Ajouter vetement à commande (multipart)","request":{"method":"POST","header":[{"key":"Content-Type","value":"multipart/form-data"}],"body":{"mode":"formdata","formdata":[{"key":"description","value":"Nouveau vetement"},{"key":"photo","type":"file","src":""}]},"url":{"raw":"{{baseUrl}}/api/commandes/1/vetements","host":["{{baseUrl}}"],"path":["api","commandes","1","vetements"]}}},
+        {"name":"Liste vetements d'une commande","request":{"method":"GET","url":{"raw":"{{baseUrl}}/api/commandes/1/vetements","host":["{{baseUrl}}"],"path":["api","commandes","1","vetements"]}}},
+        {"name":"Recherche par image (multipart)","request":{"method":"POST","header":[{"key":"Content-Type","value":"multipart/form-data"}],"body":{"mode":"formdata","formdata":[{"key":"image","type":"file","src":""}]},"url":{"raw":"{{baseUrl}}/api/vetements/recherche-image","host":["{{baseUrl}}"],"path":["api","vetements","recherche-image"]}}}
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {"name":"Envoyer mail test","request":{"method":"POST","url":{"raw":"{{baseUrl}}/api/notifications/test?to=demo%40example.com","host":["{{baseUrl}}"],"path":["api","notifications","test"],"query":[{"key":"to","value":"demo@example.com"}]}}},
+        {"name":"Envoyer facture d'une commande","request":{"method":"POST","url":{"raw":"{{baseUrl}}/api/notifications/commandes/1/facture","host":["{{baseUrl}}"],"path":["api","notifications","commandes","1","facture"]}}},
+        {"name":"Déclencher rappels","request":{"method":"POST","url":{"raw":"{{baseUrl}}/api/notifications/rappels/execution","host":["{{baseUrl}}"],"path":["api","notifications","rappels","execution"]}}}
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {"name":"Chat avec assistant","request":{"method":"POST","header":[{"key":"Content-Type","value":"application/json"}],"body":{"mode":"raw","raw":"{\"message\": \"Donne-moi la liste des commandes pour l'utilisateur 1\"}"},"url":{"raw":"{{baseUrl}}/api/chat","host":["{{baseUrl}}"],"path":["api","chat"]}}}
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (form)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/x-www-form-urlencoded"}
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {"key": "email", "value": "demo@example.com", "type": "text"},
+                {"key": "motDePasse", "value": "secret123", "type": "text"}
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/login", "host": ["{{baseUrl}}"], "path": ["login"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UI",
+      "item": [
+        {"name":"Page login","request":{"method":"GET","url":{"raw":"{{baseUrl}}/login","host":["{{baseUrl}}"],"path":["login"]}}}
+      ]
+    }
+  ],
+  "variable": [
+    {"key":"baseUrl","value":"http://localhost:8080"}
+  ]
+}
