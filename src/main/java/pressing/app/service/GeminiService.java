@@ -25,7 +25,7 @@ public class GeminiService {
             return Collections.emptyMap();
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
         String prompt = "Analyse cette image de vêtement. Retourne UNIQUEMENT un objet JSON avec les clés suivantes : " +
                 "\"categorie\" (choisis parmi: CHEMISE, PANTALON, ROBE, VESTE, MANTEAU, JUPE, TSHIRT, COSTUME, AUTRE) " +
@@ -71,7 +71,7 @@ public class GeminiService {
             return Collections.singletonMap("error", "Clé API Gemini non configurée");
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
 
         Map<String, Object> geminiRequest = new HashMap<>();
         

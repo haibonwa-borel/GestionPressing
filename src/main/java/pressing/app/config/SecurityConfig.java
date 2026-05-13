@@ -62,6 +62,8 @@ public class SecurityConfig {
             // Autorisations
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/login", "/api/logout").permitAll()
+                // Le chatbot est appelé depuis l'UI web (auth par session, pas JWT)
+                .requestMatchers("/api/chat").permitAll()
                 .anyRequest().authenticated()
             )
 
